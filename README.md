@@ -25,7 +25,7 @@ This application is suitable for the microservices architecture because of sever
 ## Service Boundaries
 
 - **User service:** The user service handles user registrations, user authentification and user authorisation.
-- **Image service:** The image service handles operations related to images. Depending on user authorisation, images can be uploaded and deleted. Images can also be added or removed from galleries. Galleries are simple collections of images. Individual images and galleries can have an optional name and short description. The image service will query the user service if it needs authorization.
+- **Image service:** The image service handles operations related to images. Depending on user authorisation, images can be uploaded and deleted. Images can have an optional name and short description. The image service will query the user service if it needs authorization.
 - **API Gateway:** The API Gateway will stand between the (supposed) front end of the website and the other services. It will query service discovery and then forward the requests to the user and image service.
 - **Service Discovery:** The service discovery will keep the addresses of all other services in memory and be queried by services which make requests. It will also perform load balancing
 - **Cache:** The cache will store user tokens until they expire. It will also cache an image for an hour if it is queried more than twice within 10 minutes.
@@ -57,14 +57,6 @@ This application is suitable for the microservices architecture because of sever
 - Upload image
 - Delete image
 - Modify image name or description
-- Get gallery
-- Create gallery
-- Delete gallery
-- Modify gallery name or description
-- Add image to gallery
-- Remove image from gallery
-- Add permission to gallery
-- Remove permission from gallery
 
 ## Deployment and Scaling
 
