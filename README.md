@@ -40,7 +40,7 @@ This application is suitable for the microservices architecture because of sever
 
 ## Technology Stack
 - **User service:** Go
-  - **User database:** PostgreSQL
+  - **User database:** MongoDB
 - **Image service:** Go
   - **Image database:** MongoDB
 - **API Gateway:** Ruby on Rails.
