@@ -1,4 +1,10 @@
-# Drawio files
+# visual studio code
+.vscode
 
+# db volumes
+local/db-data
+
+# Drawio files
 *.bkp
 *.dtmp
+

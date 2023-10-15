@@ -1,0 +1,25 @@
+version: '3.5'
+services:
+  postgres:
+    container_name: user_db_postgres
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_DB: USERDATABASE
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - 5432:5432
+    volumes:
+      - ./local/db-data/postgres-data:/var/lib/postgresql/data
+  mongo:
+    container_name: image_db_mongo
+    image: mongo:latest
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=mongopassword
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./local/db-data/mongo-data:/data/mongo
