@@ -31,8 +31,8 @@ func (s *AuthService) Login(username, password string) (accessToken string, refr
 		return "", "", errors.New("passwords do not match")
 	}
 
-	accessToken = s.ts.NewAccessToken(user.ID)
-	refreshToken = s.ts.NewRefreshToken(user.ID)
+	accessToken = s.ts.NewAccessToken(user.ID, username)
+	refreshToken = s.ts.NewRefreshToken(user.ID, username)
 
 	err = s.cacheTokens(accessToken, refreshToken)
 	if err != nil {
@@ -84,8 +84,15 @@ func (s *AuthService) Refresh(pasetoToken string) (accessToken string, refreshTo
 		return "", "", err
 	}
 
-	accessToken = s.ts.NewAccessToken(userID)
-	refreshToken = s.ts.NewRefreshToken(userID)
+	var username string
+	err = token.Get("user-name", &username)
+	if err != nil {
+		log.Error().Err(err).Msg("Error parsing user-name")
+		return "", "", err
+	}
+
+	accessToken = s.ts.NewAccessToken(userID, username)
+	refreshToken = s.ts.NewRefreshToken(userID, username)
 
 	err = s.cacheTokens(accessToken, refreshToken)
 	if err != nil {

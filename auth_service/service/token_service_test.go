@@ -33,13 +33,13 @@ func TestNewTokens(t *testing.T) {
 
 	tokenService := NewTokenService()
 
-	accessToken := tokenService.NewAccessToken(1)
+	accessToken := tokenService.NewAccessToken(1, "test")
 
 	if accessToken == "" {
 		t.Errorf("Expected accessToken to not be empty")
 	}
 
-	refreshToken := tokenService.NewRefreshToken(1)
+	refreshToken := tokenService.NewRefreshToken(1, "test")
 
 	if refreshToken == "" {
 		t.Errorf("Expected refreshToken to not be empty")
@@ -51,7 +51,7 @@ func TestVerifyAccessToken(t *testing.T) {
 
 	tokenService := NewTokenService()
 
-	accessToken := tokenService.NewAccessToken(1)
+	accessToken := tokenService.NewAccessToken(1, "test")
 
 	pasetoAccessToken, err := tokenService.VerifyAccessToken(accessToken)
 	if err != nil {
@@ -74,7 +74,7 @@ func TestVerifyRefreshToken(t *testing.T) {
 
 	tokenService := NewTokenService()
 
-	refreshToken := tokenService.NewRefreshToken(1)
+	refreshToken := tokenService.NewRefreshToken(1, "test")
 
 	pasetoRefreshToken, err := tokenService.VerifyRefreshToken(refreshToken)
 	if err != nil {

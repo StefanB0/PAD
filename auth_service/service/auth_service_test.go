@@ -6,10 +6,13 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
+	"github.com/rs/zerolog"
 )
 
 func setup(t *testing.T) *AuthService {
 	godotenv.Load("../.env")
+	zerolog.SetGlobalLevel(zerolog.Disabled)
+
 	postgresUser := os.Getenv("POSTGRES_USER")
 	postgresPassword := os.Getenv("POSTGRES_PASSWORD")
 	postgresDB := os.Getenv("POSTGRES_DB")
@@ -107,7 +110,7 @@ func TestRefresh(t *testing.T) {
 	authService := setup(t)
 	defer authService.db.DeleteAll()
 
-	refreshToken := authService.ts.NewRefreshToken(1)
+	refreshToken := authService.ts.NewRefreshToken(1, "test")
 
 	accessT, refreshT, err := authService.Refresh(refreshToken)
 	if err != nil {
