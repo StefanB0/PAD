@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "proto/image_msg.proto";
+
+service ImageService {
+  rpc GetImage(GetImageRequest) returns (GetImageResponse) {}
+  rpc UploadImage(UploadImageRequest) returns (UploadImageResponse) {}
+  rpc DeleteImage(DeleteImageRequest) returns (DeleteImageResponse) {}
+  rpc ModifyImage(ModifyImageRequest) returns (ModifyImageResponse) {}
+  rpc GetImageList(GetImageListRequest) returns (GetImageListResponse) {}
+}

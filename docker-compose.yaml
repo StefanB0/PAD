@@ -23,3 +23,10 @@ services:
       - "27017:27017"
     volumes:
       - ./local/db-data/mongo-data:/data/mongo
+  redis:
+    container_name: user_cache_redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./local/db-data/redis-db:/data/redis
