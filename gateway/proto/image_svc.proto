@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "proto/image_msg.proto";
+import "image_msg.proto";
 
 service ImageService {
   rpc GetImage(GetImageRequest) returns (GetImageResponse) {}

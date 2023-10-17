@@ -1,27 +1,33 @@
 require 'redis'
+require 'singleton'
+require 'dotenv'
 
-module RedisCache 
-  @redis = Redis.new(:timeout => ENV['REDIS_TIMEOUT'])
+Dotenv.load('.env')
 
-  def self.setAccessToken(key, value)
-    @redis.set(key, value)
-    @redis.expire(key, ENV['ACCESS_TOKEN_DURATION'])
+class RedisCache 
+  include Singleton
+
+  def initialize
+    @redis = Redis.new(:timeout => ENV['REDIS_TIMEOUT'].to_i)
   end
 
-  def self.setRefreshToken(key, value)
-    @redis.set(key, value)
-    @redis.expire(key, ENV['REFRESH_TOKEN_DURATION'])
+  def check_token(access_token)
+    @redis.get(access_token).nil? ? false : true
   end
 
-  def self.get(key)
+  def set(key, value)
+    @redis.set(key, value)
+  end
+
+  def get(key)
     @redis.get(key)
   end
 
-  def self.delete(key)
+  def delete(key)
     @redis.del(key)
   end
 
-  def self.flush
+  def flush
     @redis.flushall
   end
 end

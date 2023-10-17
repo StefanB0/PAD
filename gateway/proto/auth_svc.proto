@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "proto/auth_msg.proto";
+import "auth_msg.proto";
 import "google/protobuf/empty.proto";
 
 service AuthService {
