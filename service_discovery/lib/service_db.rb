@@ -25,7 +25,14 @@ class ServiceDB
   end
 
   def remove_service(name, address, secretkey)
-    return :unauthorized unless @secretdb[name+address] == secretkey
+    if name.nil? || address.nil? || secretkey.nil? || name.empty? || address.empty? || secretkey.empty?
+      return :unauthorized
+    end
+
+    unless @secretdb[name+address] == secretkey
+      return :unauthorized
+    end
+
     @db[name].delete(address)
     if @db[name].empty?
       @db.delete(name)
