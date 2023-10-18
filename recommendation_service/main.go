@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	analyticsDB := database.NewAnalyticsPostgresDB()
+	analyticsDB := database.NewPostgresDatabase()
 	recommendationService := service.NewRecommendationService(analyticsDB)
 	controller := controller.NewController(recommendationService)
 

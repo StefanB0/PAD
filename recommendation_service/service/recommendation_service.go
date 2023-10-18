@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"math/rand"
 	"padrecommendations/database"
 	"padrecommendations/models"
@@ -8,6 +9,7 @@ import (
 
 type RecommendationService struct {
 	analyticsDB *database.AnalyticsPostgresDB
+	// analyticsDB *database.AnalyticsPostgresDB
 }
 
 func NewRecommendationService(analyticsDB *database.AnalyticsPostgresDB) *RecommendationService {
@@ -16,22 +18,27 @@ func NewRecommendationService(analyticsDB *database.AnalyticsPostgresDB) *Recomm
 	}
 }
 
-func (service *RecommendationService) GetTags() []string {
-	return service.analyticsDB.GetTags()
+func (s *RecommendationService) GetTags() []string {
+	return s.analyticsDB.GetTags()
 }
 
-func (service *RecommendationService) GetRecommendations(tagname string) (int, error) {
-	taglist, err := service.analyticsDB.GetTaglist(tagname)
+func (s *RecommendationService) GetRecommendations(tagname string) (int, error) {
+	imagelist, err := s.analyticsDB.GetImageList(tagname)
 	if err != nil {
 		return 0, err
 	}
 
-	randNum := rand.Intn(len(taglist.ImageList)) + 1
-	randImage := 1
+	totalEngagement, err := s.analyticsDB.GetTagEngagement(tagname)
+	if err != nil {
+		return 0, err
+	}
+
+	randNum := rand.Intn(totalEngagement) + 1
+	randImage := 0
 
 	var counter int
 
-	for _, image := range taglist.ImageList {
+	for _, image := range imagelist {
 		counter += image.Engagement
 		if counter >= randNum {
 			randImage = image.ImageID
@@ -39,20 +46,28 @@ func (service *RecommendationService) GetRecommendations(tagname string) (int, e
 		}
 	}
 
+	fmt.Println("randImage: ", randImage)
+	fmt.Println("totalEngagement: ", totalEngagement)
+	for _, image := range imagelist {
+		fmt.Println("image: ", image.ImageID, "engagement: ", image.Engagement)
+	}
+
 	return randImage, nil
 }
 
-func (service *RecommendationService) AddImage(image models.Image) {
-	service.analyticsDB.AddImage(image)
+func (s *RecommendationService) AddImage(image models.Image) {
+	image.Engagement = image.Views + image.Likes
+	image.Engagement += 100
+	s.analyticsDB.AddImage(image)
 }
 
-func (service *RecommendationService) UpdateImage(image models.Image) {
-	service.analyticsDB.UpdateImage(image)
-}
+// func (service *RecommendationService) UpdateImage(image models.Image) {
+// 	service.analyticsDB.UpdateImage(image)
+// }
 
-func (service *RecommendationService) GetImage(imageID int) (models.Image, error) {
-	return service.analyticsDB.GetImage(imageID)
-}
+// func (s *RecommendationService) GetImage(imageID int) (*models.Image, error) {
+// 	return s.analyticsDB.GetImage(imageID)
+// }
 
 func (service *RecommendationService) AddView(imageID int, views int) {
 	_, err := service.analyticsDB.GetImage(imageID)
@@ -60,14 +75,14 @@ func (service *RecommendationService) AddView(imageID int, views int) {
 		return
 	}
 
-	service.analyticsDB.AddViews(imageID, views)
+	service.analyticsDB.AddViews(imageID, views, views)
 }
 
-func (service *RecommendationService) AddLike(imageID int, likes int) {
-	_, err := service.analyticsDB.GetImage(imageID)
+func (s *RecommendationService) AddLike(imageID int, likes int) {
+	_, err := s.analyticsDB.GetImage(imageID)
 	if err != nil {
 		return
 	}
 
-	service.analyticsDB.AddLikes(imageID, likes)
+	s.analyticsDB.AddLikes(imageID, likes, likes*50)
 }

@@ -1,111 +1,269 @@
 package database
 
 import (
-	"errors"
+	"os"
 	"padrecommendations/models"
+	"padrecommendations/utils"
+
+	"github.com/joho/godotenv"
+	"github.com/rs/zerolog/log"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-// todo: implement postgresql database
-
 type AnalyticsPostgresDB struct {
-	tags   []*models.Taglist
-	images []*models.Image
+	imageDB *gorm.DB
 }
 
-func NewAnalyticsPostgresDB() *AnalyticsPostgresDB {
-	return &AnalyticsPostgresDB{}
-}
+// Create new user repository
+func NewPostgresDatabase() *AnalyticsPostgresDB {
 
-func (db *AnalyticsPostgresDB) CreateTaglist(taglist *models.Taglist) {
-	db.tags = append(db.tags, taglist)
+	godotenv.Load()
+
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	dbName := os.Getenv("POSTGRES_DB")
+	host := os.Getenv("POSTGRES_ADDRESS") // "localhost:5432/"
+
+	dbURL := "postgres://" + user + ":" + password + "@" + host + dbName
+
+	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
+
+	if err != nil {
+		log.Error().Err(err).Msg("Error connecting to Postgres")
+		return nil
+	}
+
+	db.AutoMigrate(&models.TagSQL{})
+	db.AutoMigrate(&models.ImageSQL{})
+
+	log.Info().Msg("Connected to Postgres")
+	return &AnalyticsPostgresDB{
+		imageDB: db,
+	}
 }
 
 func (db *AnalyticsPostgresDB) GetTags() []string {
-	var tags []string
-	for _, tag := range db.tags {
-		tags = append(tags, tag.Tagname)
+	var tagnames []string
+	var tags []models.TagSQL
+
+	result := db.imageDB.Find(&tags)
+
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error retrieving taglists from Postgres")
+		return tagnames
 	}
 
-	return tags
-}
-
-func (db *AnalyticsPostgresDB) GetTaglist(tagname string) (*models.Taglist, error) {
-	for _, tag := range db.tags {
-		if tag.Tagname == tagname {
-			return tag, nil
-		}
+	for _, tag := range tags {
+		tagnames = append(tagnames, tag.Tagname)
 	}
 
-	return &models.Taglist{}, errors.New("Tag not found")
+	return tagnames
 }
 
-func (db *AnalyticsPostgresDB) AddImage(image models.Image) {
+func (db *AnalyticsPostgresDB) GetTagEngagement(tag string) (int, error) {
+	var taglist models.TagSQL
+
+	result := db.imageDB.First(&taglist, "tagname = ?", tag)
+
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error retrieving taglist from Postgres")
+		return 0, result.Error
+	}
+
+	return taglist.TotalEngagement, nil
+}
+
+func (db *AnalyticsPostgresDB) GetImageList(tag string) ([]models.Image, error) {
+	var images []models.Image
+	var sqlimages []models.ImageSQL
+
+	// err := db.imageDB.Preload("Tags").Where("tagname = ?", tag).Find(&sqlimages).Error
+	// err := db.imageDB.Where("tagname = ?", tag).Find(&sqlimages).Error
+	err := db.imageDB.Preload("Tags", "tagname = ?", tag).Find(&sqlimages).Error
+	if err != nil {
+		log.Error().Err(err).Msg("Error retrieving images from Postgres")
+		return nil, err
+	}
+
+	for _, sqlimage := range sqlimages {
+		images = append(images, models.Image{
+			ImageID:    sqlimage.ImageID,
+			Views:      sqlimage.Views,
+			Likes:      sqlimage.Likes,
+			Engagement: sqlimage.Engagement,
+		})
+	}
+	return images, nil
+}
+
+func (db *AnalyticsPostgresDB) GetImage(imageID int) (*models.Image, error) {
+	var image models.Image
+
+	result := db.imageDB.First(&image, "image_id = ?", imageID)
+
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error retrieving image from Postgres")
+		return nil, result.Error
+	}
+
+	return &image, nil
+}
+
+func (db *AnalyticsPostgresDB) AddImage(image models.Image) error {
+	sqlImage := models.ImageSQL{
+		ImageID:    image.ImageID,
+		Views:      image.Views,
+		Likes:      image.Likes,
+		Engagement: image.Engagement,
+	}
+
+	result := db.imageDB.Create(&sqlImage)
+
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error creating image in Postgres")
+		return result.Error
+	}
+
+	existingTags := db.GetTags()
+
 	for _, tag := range image.Tags {
-		taglist, err := db.GetTaglist(tag)
-		if err != nil {
-			taglist = &models.Taglist{Tagname: tag}
-			db.CreateTaglist(taglist)
+		if !utils.ContainsString(existingTags, tag) {
+			db.imageDB.Create(&models.TagSQL{
+				Tagname:         tag,
+				TotalEngagement: image.Engagement,
+			})
+		} else {
+			var taglist models.TagSQL
+
+			result := db.imageDB.First(&taglist, "tagname = ?", tag)
+
+			if result.Error != nil {
+				log.Error().Err(result.Error).Msg("Error retrieving taglist from Postgres")
+				return result.Error
+			}
+
+			taglist.TotalEngagement += image.Engagement
+
+			result = db.imageDB.Save(&taglist)
+
+			if result.Error != nil {
+				log.Error().Err(result.Error).Msg("Error updating taglist in Postgres")
+				return result.Error
+			}
+
 		}
-		taglist.ImageList = append(taglist.ImageList, &image)
-		db.images = append(db.images, &image)
 	}
+
+	return nil
 }
 
-func (db *AnalyticsPostgresDB) GetImage(imageID int) (models.Image, error) {
-	for _, image := range db.images {
-		if image.ImageID == imageID {
-			return *image, nil
+func (db *AnalyticsPostgresDB) AddViews(imageID int, views int, engagement int) error {
+	var image models.ImageSQL
+
+	result := db.imageDB.First(&image, "image_id = ?", imageID)
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error retrieving image from Postgres")
+		return result.Error
+	}
+
+	for _, tagname := range image.Tags {
+		var tag models.TagSQL
+		result := db.imageDB.First(&tag, "tagname = ?", tagname)
+		if result.Error != nil {
+			log.Error().Err(result.Error).Msg("Error retrieving tag from Postgres")
+			return result.Error
 		}
-	}
-
-	return models.Image{}, errors.New("Image not found")
-}
-
-func (db *AnalyticsPostgresDB) UpdateImage(image models.Image) {
-	oldimage, err := db.GetImage(image.ImageID)
-	if err != nil {
-		return
-	}
-
-	oldimage.Views = image.Views
-	oldimage.Likes = image.Likes
-	oldimage.Engagement = image.Engagement
-}
-
-func (db *AnalyticsPostgresDB) AddViews(imageID int, views int) {
-	image, err := db.GetImage(imageID)
-	if err != nil {
-		return
+		
+		tag.TotalEngagement += engagement
+		db.imageDB.Save(&tag)
 	}
 
 	image.Views += views
-	image.Engagement += views
+	image.Engagement += engagement
+
+	result = db.imageDB.Save(&image)
+
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error updating image in Postgres")
+		return result.Error
+	}
+
+	return nil
 }
 
-func (db *AnalyticsPostgresDB) AddLikes(imageID int, likes int) {
-	image, err := db.GetImage(imageID)
-	if err != nil {
-		return
+func (db *AnalyticsPostgresDB) AddLikes(imageID int, likes int, engagement int) error {
+	var image models.ImageSQL
+
+	result := db.imageDB.First(&image, "image_id = ?", imageID)
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error retrieving image from Postgres")
+		return result.Error
+	}
+
+	for _, tagname := range image.Tags {
+		var tag models.TagSQL
+		result := db.imageDB.First(&tag, "tagname = ?", tagname)
+		if result.Error != nil {
+			log.Error().Err(result.Error).Msg("Error retrieving tag from Postgres")
+			return result.Error
+		}
+		
+		tag.TotalEngagement += engagement
+		db.imageDB.Save(&tag)
 	}
 
 	image.Likes += likes
-	image.Engagement += likes * 50
+	image.Engagement += engagement
+
+	result = db.imageDB.Save(&image)
+
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error updating image in Postgres")
+		return result.Error
+	}
+
+	return nil
 }
 
-func (db *AnalyticsPostgresDB) DeleteImage(imageID int) {
-	for i, image := range db.images {
-		if image.ImageID == imageID {
-			db.images = append(db.images[:i], db.images[i+1:]...)
-			break
-		}
+func (db *AnalyticsPostgresDB) DeleteImage(imageID int) error {
+	var image models.ImageSQL
+
+	result := db.imageDB.First(&image, "image_id = ?", imageID)
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error retrieving image from Postgres")
+		return result.Error
 	}
 
-	for _, tag := range db.tags {
-		for i, image := range tag.ImageList {
-			if image.ImageID == imageID {
-				tag.ImageList = append(tag.ImageList[:i], tag.ImageList[i+1:]...)
-				break
-			}
+	for _, tagname := range image.Tags {
+		var tag models.TagSQL
+		result := db.imageDB.First(&tag, "tagname = ?", tagname)
+		if result.Error != nil {
+			log.Error().Err(result.Error).Msg("Error retrieving tag from Postgres")
+			return result.Error
 		}
+		
+		tag.TotalEngagement -= image.Engagement
+		db.imageDB.Save(&tagname)
 	}
+
+	result = db.imageDB.Delete(&models.ImageSQL{}, "image_id = ?", imageID)
+
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error deleting image from Postgres")
+		return result.Error
+	}
+
+	return nil
+}
+
+func (db *AnalyticsPostgresDB) DeleteAll() error {
+	result := db.imageDB.Where("1 = 1").Delete(&models.ImageSQL{})
+
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error deleting images from Postgres")
+		return result.Error
+	}
+
+	return nil
 }

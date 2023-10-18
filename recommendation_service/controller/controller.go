@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"padrecommendations/models"
 	"padrecommendations/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,20 +20,10 @@ func NewController(service *service.RecommendationService) *Controller {
 func (c *Controller) Run() {
 	app := fiber.New()
 
-	app.Get("/getTags", c.getTags)
-
-	app.Get("/recommendations/:tagname", func(ctx *fiber.Ctx) error {
-		tagname := ctx.Params("tagname")
-		imageID, err := c.rs.GetRecommendations(tagname)
-		if err != nil {
-			return ctx.Status(404).SendString(err.Error())
-		}
-
-		return ctx.Status(200).JSON(fiber.Map{
-			"imageID": imageID,
-		})
-
-	})
+	app.Post("/getTags", c.getTags)
+	app.Post("/getRecommendations", c.getRecommendations)
+	app.Post("/addImage", c.addImage)
+	app.Post("/updateImage", c.updateImage)
 
 	app.Listen(":8083")
 }
@@ -45,4 +36,48 @@ func (c *Controller) getTags(ctx *fiber.Ctx) error {
 	})
 }
 
+func (c *Controller) getRecommendations(ctx *fiber.Ctx) error {
+	req := new(recommendRequest)
+	err := ctx.BodyParser(req)
+	if err != nil {
+		return ctx.Status(400).SendString("Bad request")
+	}
 
+	imageID, err := c.rs.GetRecommendations(req.Tag)
+	if err != nil {
+		return ctx.Status(404).SendString(err.Error())
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"imageID": imageID,
+	})
+}
+
+func (c *Controller) addImage(ctx *fiber.Ctx) error {
+	req := new(addImageRequest)
+	err := ctx.BodyParser(req)
+	if err != nil {
+		return ctx.Status(400).SendString("Bad request")
+	}
+
+	image := models.Image{
+		ImageID:    req.ID,
+		Tags:       req.Tags,
+	}
+	c.rs.AddImage(image)
+
+	return ctx.Status(201).SendString("Image added")
+}
+
+func (c *Controller) updateImage(ctx *fiber.Ctx) error {
+	req := new(updateImageRequest)
+	err := ctx.BodyParser(req)
+	if err != nil {
+		return ctx.Status(400).SendString("Bad request")
+	}
+
+	c.rs.AddView(req.ID, req.Views)
+	c.rs.AddLike(req.ID, req.Likes)
+
+	return ctx.Status(200).SendString("Image updated")
+}
