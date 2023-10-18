@@ -9,7 +9,6 @@ import (
 
 type RecommendationService struct {
 	analyticsDB *database.AnalyticsPostgresDB
-	// analyticsDB *database.AnalyticsPostgresDB
 }
 
 func NewRecommendationService(analyticsDB *database.AnalyticsPostgresDB) *RecommendationService {
@@ -61,14 +60,6 @@ func (s *RecommendationService) AddImage(image models.Image) {
 	s.analyticsDB.AddImage(image)
 }
 
-// func (service *RecommendationService) UpdateImage(image models.Image) {
-// 	service.analyticsDB.UpdateImage(image)
-// }
-
-// func (s *RecommendationService) GetImage(imageID int) (*models.Image, error) {
-// 	return s.analyticsDB.GetImage(imageID)
-// }
-
 func (service *RecommendationService) AddView(imageID int, views int) {
 	_, err := service.analyticsDB.GetImage(imageID)
 	if err != nil {
@@ -85,4 +76,8 @@ func (s *RecommendationService) AddLike(imageID int, likes int) {
 	}
 
 	s.analyticsDB.AddLikes(imageID, likes, likes*50)
+}
+
+func (s *RecommendationService) DeleteAll() {
+	s.analyticsDB.DeleteAll()
 }

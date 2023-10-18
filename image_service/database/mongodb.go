@@ -5,6 +5,7 @@ import (
 	"os"
 	"padimage/models"
 
+	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,6 +18,7 @@ type ImageMongoDB struct {
 }
 
 func NewMongoDB() *ImageMongoDB {
+	godotenv.Load()
 	mongoUser := os.Getenv("MONGO_USER")
 	mongoPassword := os.Getenv("MONGO_PASSWORD")
 	mongoHost := os.Getenv("MONGO_HOST")
@@ -26,6 +28,7 @@ func NewMongoDB() *ImageMongoDB {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		log.Error().Err(err).Msg("Error connecting to MongoDB")
+		log.Info().Msg(mongoURI)
 		return nil
 	}
 

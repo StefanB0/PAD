@@ -24,6 +24,7 @@ func (c *Controller) Run() {
 	app.Post("/getRecommendations", c.getRecommendations)
 	app.Post("/addImage", c.addImage)
 	app.Post("/updateImage", c.updateImage)
+	app.Post("/deleteALL", c.deleteAll)
 
 	app.Listen(":8083")
 }
@@ -61,8 +62,8 @@ func (c *Controller) addImage(ctx *fiber.Ctx) error {
 	}
 
 	image := models.Image{
-		ImageID:    req.ID,
-		Tags:       req.Tags,
+		ImageID: req.ID,
+		Tags:    req.Tags,
 	}
 	c.rs.AddImage(image)
 
@@ -80,4 +81,10 @@ func (c *Controller) updateImage(ctx *fiber.Ctx) error {
 	c.rs.AddLike(req.ID, req.Likes)
 
 	return ctx.Status(200).SendString("Image updated")
+}
+
+func (c *Controller) deleteAll(ctx *fiber.Ctx) error {
+	c.rs.DeleteAll()
+
+	return ctx.Status(200).SendString("All data deleted")
 }

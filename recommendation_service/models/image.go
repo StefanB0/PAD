@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type ImageSQL struct {
 	gorm.Model
-	ImageID    int      `gorm:"primary_key"`
+	ImageID    int      `json:"imageID" gorm:"primary_key"`
 	Tags       []TagSQL `gorm:"many2many:image_tag;"`
 	Views      int
 	Likes      int

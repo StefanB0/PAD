@@ -2,7 +2,10 @@ module padrecommendations
 
 go 1.21.0
 
-require github.com/gofiber/fiber/v2 v2.50.0
+require (
+	github.com/gofiber/fiber/v2 v2.50.0
+	gorm.io/gorm v1.25.2-0.20230530020048-26663ab9bf55
+)
 
 require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -12,7 +15,6 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
-	gorm.io/gorm v1.25.2-0.20230530020048-26663ab9bf55 // indirect
 )
 
 require (

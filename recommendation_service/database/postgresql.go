@@ -78,8 +78,6 @@ func (db *AnalyticsPostgresDB) GetImageList(tag string) ([]models.Image, error) 
 	var images []models.Image
 	var sqlimages []models.ImageSQL
 
-	// err := db.imageDB.Preload("Tags").Where("tagname = ?", tag).Find(&sqlimages).Error
-	// err := db.imageDB.Where("tagname = ?", tag).Find(&sqlimages).Error
 	err := db.imageDB.Preload("Tags", "tagname = ?", tag).Find(&sqlimages).Error
 	if err != nil {
 		log.Error().Err(err).Msg("Error retrieving images from Postgres")
@@ -98,13 +96,20 @@ func (db *AnalyticsPostgresDB) GetImageList(tag string) ([]models.Image, error) 
 }
 
 func (db *AnalyticsPostgresDB) GetImage(imageID int) (*models.Image, error) {
-	var image models.Image
+	var imagesql models.ImageSQL
 
-	result := db.imageDB.First(&image, "image_id = ?", imageID)
+	result := db.imageDB.First(&imagesql, "image_id = ?", imageID)
 
 	if result.Error != nil {
 		log.Error().Err(result.Error).Msg("Error retrieving image from Postgres")
 		return nil, result.Error
+	}
+
+	image := models.Image{
+		ImageID:    imagesql.ImageID,
+		Views:      imagesql.Views,
+		Likes:      imagesql.Likes,
+		Engagement: imagesql.Engagement,
 	}
 
 	return &image, nil
@@ -161,22 +166,10 @@ func (db *AnalyticsPostgresDB) AddImage(image models.Image) error {
 func (db *AnalyticsPostgresDB) AddViews(imageID int, views int, engagement int) error {
 	var image models.ImageSQL
 
-	result := db.imageDB.First(&image, "image_id = ?", imageID)
+	result := db.imageDB.Preload("Tags").First(&image, "image_id = ?", imageID)
 	if result.Error != nil {
 		log.Error().Err(result.Error).Msg("Error retrieving image from Postgres")
 		return result.Error
-	}
-
-	for _, tagname := range image.Tags {
-		var tag models.TagSQL
-		result := db.imageDB.First(&tag, "tagname = ?", tagname)
-		if result.Error != nil {
-			log.Error().Err(result.Error).Msg("Error retrieving tag from Postgres")
-			return result.Error
-		}
-		
-		tag.TotalEngagement += engagement
-		db.imageDB.Save(&tag)
 	}
 
 	image.Views += views
@@ -189,38 +182,38 @@ func (db *AnalyticsPostgresDB) AddViews(imageID int, views int, engagement int) 
 		return result.Error
 	}
 
+	tags := image.Tags
+
+	for _, tag := range tags {
+		tag.TotalEngagement += engagement
+		db.imageDB.Save(&tag)
+	}
+
 	return nil
 }
 
 func (db *AnalyticsPostgresDB) AddLikes(imageID int, likes int, engagement int) error {
 	var image models.ImageSQL
-
-	result := db.imageDB.First(&image, "image_id = ?", imageID)
+	result := db.imageDB.Preload("Tags").First(&image, "image_id = ?", imageID)
 	if result.Error != nil {
 		log.Error().Err(result.Error).Msg("Error retrieving image from Postgres")
 		return result.Error
-	}
-
-	for _, tagname := range image.Tags {
-		var tag models.TagSQL
-		result := db.imageDB.First(&tag, "tagname = ?", tagname)
-		if result.Error != nil {
-			log.Error().Err(result.Error).Msg("Error retrieving tag from Postgres")
-			return result.Error
-		}
-		
-		tag.TotalEngagement += engagement
-		db.imageDB.Save(&tag)
 	}
 
 	image.Likes += likes
 	image.Engagement += engagement
 
 	result = db.imageDB.Save(&image)
-
 	if result.Error != nil {
 		log.Error().Err(result.Error).Msg("Error updating image in Postgres")
 		return result.Error
+	}
+
+	tags := image.Tags
+
+	for _, tag := range tags {
+		tag.TotalEngagement += engagement
+		db.imageDB.Save(&tag)
 	}
 
 	return nil
@@ -242,7 +235,7 @@ func (db *AnalyticsPostgresDB) DeleteImage(imageID int) error {
 			log.Error().Err(result.Error).Msg("Error retrieving tag from Postgres")
 			return result.Error
 		}
-		
+
 		tag.TotalEngagement -= image.Engagement
 		db.imageDB.Save(&tagname)
 	}
@@ -259,9 +252,14 @@ func (db *AnalyticsPostgresDB) DeleteImage(imageID int) error {
 
 func (db *AnalyticsPostgresDB) DeleteAll() error {
 	result := db.imageDB.Where("1 = 1").Delete(&models.ImageSQL{})
-
 	if result.Error != nil {
 		log.Error().Err(result.Error).Msg("Error deleting images from Postgres")
+		return result.Error
+	}
+
+	result = db.imageDB.Where("1 = 1").Delete(&models.TagSQL{})
+	if result.Error != nil {
+		log.Error().Err(result.Error).Msg("Error deleting tags from Postgres")
 		return result.Error
 	}
 

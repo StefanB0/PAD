@@ -24,21 +24,21 @@ services:
       - 5433:5432
     volumes:
       - ./local/db-data/postgres-analytics-data:/var/lib/postgresql/data
-  # mongo:
-  #   container_name: image_db_mongo
-  #   image: mongo:latest
-  #   restart: always
-  #   environment:
-  #     - MONGO_INITDB_ROOT_USERNAME=admin
-  #     - MONGO_INITDB_ROOT_PASSWORD=mongopassword
-  #   ports:
-  #     - "27017:27017"
-  #   volumes:
-  #     - ./local/db-data/mongo-data:/data/mongo
-  # redis:
-  #   container_name: user_cache_redis
-  #   image: redis:latest
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - ./local/db-data/redis-db:/data/redis
+  mongo:
+    container_name: image_db_mongo
+    image: mongo:latest
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=mongopassword
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./local/db-data/mongo-data:/data/mongo
+  redis:
+    container_name: user_cache_redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./local/db-data/redis-db:/data/redis
