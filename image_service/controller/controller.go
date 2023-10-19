@@ -11,12 +11,14 @@ import (
 type ImageController struct {
 	imageService *service.ImageService
 	tokenService *service.TokenService
+	semaphore    *service.Semaphore
 }
 
 func NewImageController(is *service.ImageService, ts *service.TokenService) *ImageController {
 	return &ImageController{
 		imageService: is,
 		tokenService: ts,
+		semaphore:    service.NewSemaphore(20),
 	}
 }
 
@@ -40,6 +42,9 @@ func (c *ImageController) status(ctx *fiber.Ctx) error {
 }
 
 func (c *ImageController) getImage(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+
 	req := new(getImageRequest)
 	err := ctx.BodyParser(req)
 	if err != nil {
@@ -59,6 +64,9 @@ func (c *ImageController) getImage(ctx *fiber.Ctx) error {
 }
 
 func (c *ImageController) getImageInfo(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+	
 	req := new(getImageRequest)
 	err := ctx.BodyParser(req)
 	if err != nil {
@@ -82,6 +90,9 @@ func (c *ImageController) getImageInfo(ctx *fiber.Ctx) error {
 }
 
 func (c *ImageController) upload(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+	
 	req := new(uploadRequest)
 
 	form, err := ctx.MultipartForm()
@@ -136,6 +147,9 @@ func (c *ImageController) upload(ctx *fiber.Ctx) error {
 }
 
 func (c *ImageController) likeImage(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+
 	req := new(likeRequest)
 	err := ctx.BodyParser(req)
 	if err != nil {
@@ -151,6 +165,9 @@ func (c *ImageController) likeImage(ctx *fiber.Ctx) error {
 }
 
 func (c *ImageController) update(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+
 	req := new(updateRequest)
 	err := ctx.BodyParser(req)
 	if err != nil {
@@ -177,6 +194,9 @@ func (c *ImageController) update(ctx *fiber.Ctx) error {
 }
 
 func (c *ImageController) delete(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+
 	req := new(deleteRequest)
 	err := ctx.BodyParser(req)
 	if err != nil {
@@ -194,6 +214,8 @@ func (c *ImageController) delete(ctx *fiber.Ctx) error {
 }
 
 func (c *ImageController) deleteAll(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
 
 	err := c.imageService.DeleteAllImages()
 	if err != nil {

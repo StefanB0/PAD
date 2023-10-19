@@ -8,12 +8,14 @@ import (
 )
 
 type Controller struct {
-	rs *service.RecommendationService
+	rs        *service.RecommendationService
+	semaphore *service.Semaphore
 }
 
-func NewController(service *service.RecommendationService) *Controller {
+func NewController(rs *service.RecommendationService) *Controller {
 	return &Controller{
-		rs: service,
+		rs:        rs,
+		semaphore: service.NewSemaphore(20),
 	}
 }
 
@@ -36,6 +38,9 @@ func (c *Controller) status(ctx *fiber.Ctx) error {
 }
 
 func (c *Controller) getTags(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+
 	tags := c.rs.GetTags()
 
 	return ctx.Status(200).JSON(fiber.Map{
@@ -44,6 +49,9 @@ func (c *Controller) getTags(ctx *fiber.Ctx) error {
 }
 
 func (c *Controller) getRecommendations(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+
 	req := new(recommendRequest)
 	err := ctx.BodyParser(req)
 	if err != nil {
@@ -61,6 +69,9 @@ func (c *Controller) getRecommendations(ctx *fiber.Ctx) error {
 }
 
 func (c *Controller) addImage(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+
 	req := new(addImageRequest)
 	err := ctx.BodyParser(req)
 	if err != nil {
@@ -77,6 +88,9 @@ func (c *Controller) addImage(ctx *fiber.Ctx) error {
 }
 
 func (c *Controller) updateImage(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+
 	req := new(updateImageRequest)
 	err := ctx.BodyParser(req)
 	if err != nil {
@@ -90,6 +104,9 @@ func (c *Controller) updateImage(ctx *fiber.Ctx) error {
 }
 
 func (c *Controller) deleteAll(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+	
 	c.rs.DeleteAll()
 
 	return ctx.Status(200).SendString("All data deleted")
