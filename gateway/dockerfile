@@ -1,0 +1,20 @@
+# Use the official Ruby image as a base image
+FROM ruby:latest
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the Gemfile and Gemfile.lock into the container
+COPY Gemfile Gemfile.lock ./
+
+# Install dependencies using Bundler
+RUN bundle install
+
+# Copy the local files to the container's workspace
+COPY . .
+
+# Expose the port that the application will run on
+EXPOSE 8080
+
+# Command to run the Ruby application
+CMD ["ruby", "main.rb"]
