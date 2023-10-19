@@ -9,6 +9,6 @@ service_db = ServiceDB.instance
 Thread.new do
   loop do
     service_db.flush_offline_services
-    sleep 5
+    sleep 1
   end
 end

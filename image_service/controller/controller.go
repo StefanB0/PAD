@@ -22,7 +22,7 @@ func NewImageController(is *service.ImageService, ts *service.TokenService) *Ima
 	}
 }
 
-func (c *ImageController) Run() {
+func (c *ImageController) Run(port string) {
 	app := fiber.New()
 
 	app.Get("/status", c.status)
@@ -34,7 +34,7 @@ func (c *ImageController) Run() {
 	app.Post("/updateImage", c.update)
 	app.Post("/deleteImage", c.delete)
 
-	app.Listen(":8081")
+	app.Listen(port)
 }
 
 func (c *ImageController) status(ctx *fiber.Ctx) error {
@@ -66,7 +66,7 @@ func (c *ImageController) getImage(ctx *fiber.Ctx) error {
 func (c *ImageController) getImageInfo(ctx *fiber.Ctx) error {
 	c.semaphore.Acquire()
 	defer c.semaphore.Release()
-	
+
 	req := new(getImageRequest)
 	err := ctx.BodyParser(req)
 	if err != nil {
@@ -92,7 +92,7 @@ func (c *ImageController) getImageInfo(ctx *fiber.Ctx) error {
 func (c *ImageController) upload(ctx *fiber.Ctx) error {
 	c.semaphore.Acquire()
 	defer c.semaphore.Release()
-	
+
 	req := new(uploadRequest)
 
 	form, err := ctx.MultipartForm()
@@ -141,9 +141,16 @@ func (c *ImageController) upload(ctx *fiber.Ctx) error {
 		ImageChunk:  req.ImageBytes,
 	}
 
-	err = c.imageService.CreateImage(image, req.Token)
+	id, err := c.imageService.CreateImage(image, req.Token)
+	if err != nil {
+		return ctx.Status(404).SendString(err.Error())
+	}
 
-	return ctx.Status(201).SendString("Image uploaded")
+	ctx.Set("Content-Type", "application/json")
+
+	return ctx.Status(201).JSON(fiber.Map{
+		"imageID": id,
+	})
 }
 
 func (c *ImageController) likeImage(ctx *fiber.Ctx) error {

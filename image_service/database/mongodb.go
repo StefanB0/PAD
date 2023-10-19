@@ -59,11 +59,11 @@ func (db *ImageMongoDB) GetImage(imageID int) (*models.Image, error) {
 	return &image, nil
 }
 
-func (db *ImageMongoDB) CreateImage(image models.Image) error {
+func (db *ImageMongoDB) CreateImage(image models.Image) (int, error) {
 	id, err := db.genNextID()
 	if err != nil {
 		log.Error().Err(err).Msg("Error generating next image ID")
-		return err
+		return 0, err
 	}
 
 	res, err := db.userCollection.InsertOne(
@@ -79,16 +79,14 @@ func (db *ImageMongoDB) CreateImage(image models.Image) error {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Error inserting image into MongoDB")
-		return err
+		return 0, err
 	}
 
 	err = db.userCollection.FindOne(context.Background(), bson.D{
 		{Key: "_id", Value: res.InsertedID},
 	}).Decode(&image)
-
-	log.Print(image.ImageID)
-
-	return nil
+	
+	return image.ImageID, nil
 }
 
 func (db *ImageMongoDB) DeleteImage(imageID int64) error {

@@ -4,7 +4,6 @@ class LoadBalancer
   def initialize(name)
     @name = name
     @service_discovery = ServiceDiscovery.instance
-    self.query_service_discovery
   end
 
   def query_service_discovery

@@ -25,16 +25,17 @@ func (s *ImageService) GetImage(imageID int) (*models.Image, error) {
 	return s.db.GetImage(imageID)
 }
 
-func (s *ImageService) CreateImage(image models.Image, token string) error {
+func (s *ImageService) CreateImage(image models.Image, token string) (int, error) {
 	_, err := s.ts.VerifyAccessToken(token)
 	if err != nil {
 		log.Error().Err(err).Msg("Error verifying access token")
-		return err
+		return 0, err
 	}
 
-	s.as.AddImage(image.ImageID, image.Tags)
+	id, err := s.db.CreateImage(image)
+	s.as.AddImage(id, image.Tags)
 
-	return s.db.CreateImage(image)
+	return id, err
 }
 
 func (s *ImageService) UpdateImage(image models.Image, token string) error {

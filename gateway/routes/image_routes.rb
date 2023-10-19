@@ -83,7 +83,25 @@ post '/image' do
     return response.code.to_i
   end
 
-  status 201
+  content_type :json
+  [201, response.body]
+end
+
+post '/image/:id/like' do
+  id = params['id']
+  url = URI("#{load_balancer.next_item}/likeImage")
+
+  req = Net::HTTP::Post.new(url, initheader = {'Content-Type' =>'application/json'})
+  req.body = {"imageID" => id.to_i}.to_json
+
+  res = Net::HTTP.start(url.hostname, url.port) do |http|
+    http.request(req)
+  end
+
+  return res.code.to_i if res.code != '200'
+
+  content_type :json
+  res.body
 end
 
 

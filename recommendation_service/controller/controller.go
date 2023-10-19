@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"padrecommendations/models"
 	"padrecommendations/service"
 
@@ -19,7 +20,7 @@ func NewController(rs *service.RecommendationService) *Controller {
 	}
 }
 
-func (c *Controller) Run() {
+func (c *Controller) Run(port string) {
 	app := fiber.New()
 
 	app.Get("/status", c.status)
@@ -83,6 +84,7 @@ func (c *Controller) addImage(ctx *fiber.Ctx) error {
 		Tags:    req.Tags,
 	}
 	c.rs.AddImage(image)
+	log.Printf("Added image %d with tags %v", req.ID, req.Tags)
 
 	return ctx.Status(201).SendString("Image added")
 }
