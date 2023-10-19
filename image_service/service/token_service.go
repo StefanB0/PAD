@@ -11,7 +11,9 @@ import (
 )
 
 type TokenService struct {
-	key paseto.V4SymmetricKey
+	disabled bool
+
+	key    paseto.V4SymmetricKey
 	parser *paseto.Parser
 
 	accessTokenDuration  time.Duration
@@ -19,11 +21,11 @@ type TokenService struct {
 }
 
 const (
-	AccessTokenType = "accessToken"
+	AccessTokenType  = "accessToken"
 	RefreshTokenType = "refreshToken"
 )
 
-func NewTokenService() *TokenService {
+func NewTokenService(disableAuth bool) *TokenService {
 	accessTokenDurationString := os.Getenv("ACCESS_TOKEN_DURATION")
 	accessTokenDuration, err := strconv.Atoi(accessTokenDurationString)
 	if err != nil {
@@ -44,6 +46,7 @@ func NewTokenService() *TokenService {
 	parser := paseto.NewParser()
 
 	return &TokenService{
+		disabled:             disableAuth,
 		key:                  key,
 		parser:               &parser,
 		accessTokenDuration:  time.Duration(accessTokenDuration) * time.Second,
@@ -83,6 +86,10 @@ func (ts *TokenService) VerifyRefreshToken(token string) (*paseto.Token, error) 
 }
 
 func (ts *TokenService) VerifyToken(token string, tokenType string) (*paseto.Token, error) {
+	if ts.disabled {
+		return nil, nil
+	}
+	
 	pasetoToken, err := ts.parser.ParseV4Local(ts.key, token, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("Error parsing token")

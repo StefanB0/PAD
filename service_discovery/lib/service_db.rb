@@ -1,5 +1,6 @@
 require 'singleton'
 require 'securerandom'
+require 'httparty'
 
 class ServiceDB 
   include Singleton
@@ -37,5 +38,21 @@ class ServiceDB
     if @db[name].empty?
       @db.delete(name)
     end
+  end
+
+  def flush_offline_services
+    @db.each do |name, addresses|
+      addresses.each do |address|
+        unless ping_service(address)
+          @db[name].delete(address)
+          @secretdb.delete(name+address)
+        end
+      end
+    end
+  end
+
+  def ping_service(address)
+    response = HTTParty.get(address + '/status')
+    response.code == 200
   end
 end

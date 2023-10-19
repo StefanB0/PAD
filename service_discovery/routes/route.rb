@@ -5,6 +5,10 @@ require_relative '../lib/service_db.rb'
 
 service_db = ServiceDB.instance
 
+get '/status' do
+  [200, 'OK']
+end
+
 get '/service/:name' do
   service_arr = service_db.get_service(params[:name])
   if service_arr == :invalid_service
@@ -16,13 +20,18 @@ get '/service/:name' do
 end
 
 post '/service' do
-  if params[:name].nil? || params[:address].nil? || params[:name].empty? || params[:address].empty?
+  data = JSON.parse(request.body.read)
+  name = data["name"]
+  address = data["address"]
+
+  if name.nil? || name.nil? || address.empty? || address.empty?
     status 400
     return
   end
-  secretkey = service_db.add_service(params[:name], params[:address])
+
+  secretkey = service_db.add_service(name, address)
   content_type :json
-  [201, {"secret key" => secretkey}.to_json]
+  [201, {"secret_key" => secretkey}.to_json]
 end
 
 delete '/service/:name' do

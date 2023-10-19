@@ -4,13 +4,15 @@ source "https://rubygems.org"
 # Web framework
 gem 'sinatra'
 gem 'puma'
+gem 'http'
+gem 'faraday'
 
-# gRPC
-gem 'grpc'
-gem 'grpc-tools'
 
 # redis
 gem 'redis'
 
 #env
 gem 'dotenv'
+gem "multipart-post", "~> 2.3"
+
+gem "httparty", "~> 0.21.0"

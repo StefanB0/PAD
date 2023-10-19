@@ -1,61 +1,131 @@
 require 'sinatra'
-require 'json'
-require 'grpc'
+require 'httparty'
 require 'net/http'
+require 'json'
 require 'logger'
+
 
 require_relative '../lib/redis.rb'
 require_relative '../lib/service_discovery.rb'
+require_relative '../lib/load_balancer.rb'
 
 redisCache = RedisCache.instance
 
-service_discovery = ServiceDiscovery.instance
+# service_discovery = ServiceDiscovery.instance
 
-img_svc_address = service_discovery.get_service_address('image_service')
+# img_svc_address = service_discovery.get_service_address('image_service')
+# load_balancer = LoadBalancer.new(JSON.parse(img_svc_address)['services'])
+load_balancer = LoadBalancer.new('image_service')
+
 
 logger = Logger.new(STDERR)
 
 get '/image/:id' do
   id = params['id']
-  
-  begin
-    get_image_request = GetImageRequest.new(id: id)
-    get_image_response = nil # todo: call auth service
-    
-    author = get_image_response.author
-    title = get_image_response.title
-    description = get_image_response.description
-    tags = get_image_response.tags
-    imagebytes = get_image_response.imageChunk
-    error = get_image_response.error
-
-    if error != 'success'
-      return 400
-    end
-
-    content_type 'image.png'
-    send_data imagebytes, filename: 'image.png', type: 'image/png'
-    {"author": author, "title": title, "description": description, "tags": tags}.to_json
-  rescue GRPC::BadStatus => e
-    logger.error(e.to_json)
-    return 400
+  url = URI("#{load_balancer.next_item}/getImage")
+  if url.nil?
+    return 404
   end
+
+  req = Net::HTTP::Post.new(url, initheader = {'Content-Type' =>'application/json'})
+  req.body = {"imageID" => id.to_i}.to_json
+
+  res = Net::HTTP.start(url.hostname, url.port) do |http|
+    http.request(req)
+  end
+
+  return res.code.to_i if res.code != '200'
+
+  content_type 'image/jpeg'
+  res.body
 end
+
+get '/image/info/:id' do
+  id = params['id']
+  url = URI("#{load_balancer.next_item}/getImageInfo")
+  
+
+  req = Net::HTTP::Post.new(url, initheader = {'Content-Type' =>'application/json'})
+  req.body = {"imageID" => id.to_i}.to_json
+
+  res = Net::HTTP.start(url.hostname, url.port) do |http|
+    http.request(req)
+  end
+
+  return res.code.to_i if res.code != '200'
+
+  content_type :json
+  res.body
+end
+
 
 post '/image' do
-         
+  url = "#{load_balancer.next_item}/uploadImage"
+
+  response = HTTParty.post(url, {
+    body: {
+      token: params[:token],
+      author: params[:author],
+      title: params[:title],
+      description: params[:description],
+      tags: params[:tags],
+      image: params[:image][:tempfile]
+    },
+    headers: {
+      'Content-Type' => 'multipart/form-data'
+    },
+    multipart: true
+  })
+
+  unless response.code == 201
+    logger.error "Error: #{response.code}"
+    logger.error response.body.to_s
+    return response.code.to_i
+  end
+
+  status 201
 end
 
+
 delete '/image/:id' do
-                
+  id = params['id']
+  url = URI("#{load_balancer.next_item}/deleteImage")
+
+  req = Net::HTTP::Post.new(url, initheader = {'Content-Type' =>'application/json'})
+  req.body = {"imageID" => id.to_i}.to_json
+
+  res = Net::HTTP.start(url.hostname, url.port) do |http|
+    http.request(req)
+  end
+
+  return res.code.to_i if res.code != '200'
+
+  content_type :json
+  res.body                
 end
 
 put '/image/:id' do
-                   
-end
+  id = params['id']
+  url = URI("#{load_balancer.next_item}/updateImage")
 
-get '/allimg' do
-                  
+  body = {
+    "imageID" => id.to_i,
+    "author" => params[:author],
+    "title" => params[:title],
+    "description" => params[:description]
+  }
+
+  req = Net::HTTP::Post.new(url, initheader = {'Content-Type' =>'application/json'})
+  req.body = body.to_json
+
+  res = Net::HTTP.start(url.hostname, url.port) do |http|
+    http.request(req)
+  end
+
+  return res.code.to_i if res.code != '200'
+
+  content_type :json
+  res.body                                   
 end
 
 # rpc GetImage(GetImageRequest) returns (GetImageResponse) {}

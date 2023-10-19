@@ -9,17 +9,19 @@ import (
 
 type ImageService struct {
 	db *database.ImageMongoDB
+	as *AnalyticsService
 	ts *TokenService
 }
 
-func NewImageService(db *database.ImageMongoDB, ts *TokenService) *ImageService {
+func NewImageService(db *database.ImageMongoDB, as *AnalyticsService, ts *TokenService) *ImageService {
 	return &ImageService{
 		db: db,
+		as: as,
 		ts: ts,
 	}
 }
 
-func (s *ImageService) GetImage(imageID int64) (*models.Image, error) {
+func (s *ImageService) GetImage(imageID int) (*models.Image, error) {
 	return s.db.GetImage(imageID)
 }
 
@@ -29,7 +31,9 @@ func (s *ImageService) CreateImage(image models.Image, token string) error {
 		log.Error().Err(err).Msg("Error verifying access token")
 		return err
 	}
-	
+
+	s.as.AddImage(image.ImageID, image.Tags)
+
 	return s.db.CreateImage(image)
 }
 
@@ -49,15 +53,25 @@ func (s *ImageService) DeleteImage(imageID int64, token string) error {
 		log.Error().Err(err).Msg("Error verifying access token")
 		return err
 	}
-	
+
 	return s.db.DeleteImage(imageID)
 }
 
-func (s *ImageService) GetImagesByAuthor(author string) ([]int64, error) {
+func (s *ImageService) AddViews(imageId, views int) error {
+	s.as.AddEngagement(imageId, views, 0)
+	return s.db.AddViews(imageId, views)
+}
+
+func (s *ImageService) AddLikes(imageId, likes int) error {
+	s.as.AddEngagement(imageId, 0, likes)
+	return s.db.AddLikes(imageId, likes)
+}
+
+func (s *ImageService) GetImagesByAuthor(author string) ([]int, error) {
 	return s.db.GetAuthorImages(author)
 }
 
-func (s *ImageService) GetImagesByTag(tag string) ([]int64, error) {
+func (s *ImageService) GetImagesByTag(tag string) ([]int, error) {
 	return s.db.GetTagImages(tag)
 }
 

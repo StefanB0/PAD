@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"padimage/models"
+	"strconv"
 
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
@@ -41,7 +42,7 @@ func NewMongoDB() *ImageMongoDB {
 	}
 }
 
-func (db *ImageMongoDB) GetImage(imageID int64) (*models.Image, error) {
+func (db *ImageMongoDB) GetImage(imageID int) (*models.Image, error) {
 	var image models.Image
 
 	err := db.userCollection.FindOne(
@@ -51,7 +52,7 @@ func (db *ImageMongoDB) GetImage(imageID int64) (*models.Image, error) {
 		},
 	).Decode(&image)
 	if err != nil {
-		log.Error().Err(err).Msg("Error retrieving image from MongoDB")
+		log.Error().Err(err).Msg("Error retrieving image from MongoDB. Image Id: " + strconv.Itoa(imageID))
 		return nil, err
 	}
 
@@ -59,10 +60,16 @@ func (db *ImageMongoDB) GetImage(imageID int64) (*models.Image, error) {
 }
 
 func (db *ImageMongoDB) CreateImage(image models.Image) error {
-	_, err := db.userCollection.InsertOne(
+	id, err := db.genNextID()
+	if err != nil {
+		log.Error().Err(err).Msg("Error generating next image ID")
+		return err
+	}
+
+	res, err := db.userCollection.InsertOne(
 		context.Background(),
 		bson.D{
-			{Key: "imageID", Value: image.ImageID},
+			{Key: "imageID", Value: id},
 			{Key: "author", Value: image.Author},
 			{Key: "title", Value: image.Title},
 			{Key: "description", Value: image.Description},
@@ -74,6 +81,12 @@ func (db *ImageMongoDB) CreateImage(image models.Image) error {
 		log.Error().Err(err).Msg("Error inserting image into MongoDB")
 		return err
 	}
+
+	err = db.userCollection.FindOne(context.Background(), bson.D{
+		{Key: "_id", Value: res.InsertedID},
+	}).Decode(&image)
+
+	log.Print(image.ImageID)
 
 	return nil
 }
@@ -93,7 +106,7 @@ func (db *ImageMongoDB) DeleteImage(imageID int64) error {
 	return nil
 }
 
-func (db *ImageMongoDB) GetAuthorImages(author string) ([]int64, error) {
+func (db *ImageMongoDB) GetAuthorImages(author string) ([]int, error) {
 	var images []models.Image
 
 	cursor, err := db.userCollection.Find(
@@ -111,7 +124,7 @@ func (db *ImageMongoDB) GetAuthorImages(author string) ([]int64, error) {
 		log.Error().Err(err).Msg("Error decoding images from MongoDB")
 	}
 
-	var imageIDs []int64
+	var imageIDs []int
 
 	for _, image := range images {
 		imageIDs = append(imageIDs, image.ImageID)
@@ -120,7 +133,7 @@ func (db *ImageMongoDB) GetAuthorImages(author string) ([]int64, error) {
 	return imageIDs, nil
 }
 
-func (db *ImageMongoDB) GetTagImages(tag string) ([]int64, error) {
+func (db *ImageMongoDB) GetTagImages(tag string) ([]int, error) {
 	var images []models.Image
 
 	cursor, err := db.userCollection.Find(
@@ -138,7 +151,7 @@ func (db *ImageMongoDB) GetTagImages(tag string) ([]int64, error) {
 		log.Error().Err(err).Msg("Error decoding images from MongoDB")
 	}
 
-	var imageIDs []int64
+	var imageIDs []int
 
 	for _, image := range images {
 		imageIDs = append(imageIDs, image.ImageID)
@@ -147,7 +160,47 @@ func (db *ImageMongoDB) GetTagImages(tag string) ([]int64, error) {
 	return imageIDs, nil
 }
 
-func (db *ImageMongoDB) ModifyImage(imageID int64, image models.Image) error {
+func (db *ImageMongoDB) AddViews(imageID int, views int) error {
+	_, err := db.userCollection.UpdateOne(
+		context.Background(),
+		bson.D{
+			{Key: "imageID", Value: imageID},
+		},
+		bson.D{
+			{Key: "$inc", Value: bson.D{
+				{Key: "views", Value: views},
+			}},
+		},
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("Error adding views to image in MongoDB")
+		return err
+	}
+
+	return nil
+}
+
+func (db *ImageMongoDB) AddLikes(imageID int, likes int) error {
+	_, err := db.userCollection.UpdateOne(
+		context.Background(),
+		bson.D{
+			{Key: "imageID", Value: imageID},
+		},
+		bson.D{
+			{Key: "$inc", Value: bson.D{
+				{Key: "likes", Value: likes},
+			}},
+		},
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("Error adding likes to image in MongoDB")
+		return err
+	}
+
+	return nil
+}
+
+func (db *ImageMongoDB) ModifyImage(imageID int, image models.Image) error {
 	_, err := db.userCollection.UpdateOne(
 		context.Background(),
 		bson.D{
@@ -158,8 +211,6 @@ func (db *ImageMongoDB) ModifyImage(imageID int64, image models.Image) error {
 				{Key: "author", Value: image.Author},
 				{Key: "title", Value: image.Title},
 				{Key: "description", Value: image.Description},
-				{Key: "tags", Value: image.Tags},
-				{Key: "imageChunk", Value: image.ImageChunk},
 			}},
 		},
 	)
@@ -184,92 +235,19 @@ func (db *ImageMongoDB) DeleteAll() error {
 	return nil
 }
 
-// func (db *UserMongoDB) GetAll() ([]models.Image, error) {
-// 	var images []models.Image
+func (db *ImageMongoDB) genNextID() (int, error) {
+	var newestImage models.Image
 
-// 	cursor, err := db.userCollection.Find(
-// 		context.Background(),
-// 		bson.D{},
-// 	)
+	err := db.userCollection.FindOne(
+		context.Background(),
+		bson.D{},
+		options.FindOne().SetSort(bson.D{{Key: "imageID", Value: -1}}),
+	).Decode(&newestImage)
 
-// 	if err != nil {
-// 		log.Error().Err(err).Msg("Error retrieving images from MongoDB")
-// 		return nil, err
-// 	}
+	if err != nil && err != mongo.ErrNoDocuments {
+		log.Error().Err(err).Msg("Error retrieving newest image from MongoDB")
+		return -1, err
+	}
 
-// 	if err = cursor.All(context.Background(), &images); err != nil {
-// 		log.Error().Err(err).Msg("Error decoding images from MongoDB")
-// 	}
-
-// 	return images, nil
-// }
-
-// func (db *UserMongoDB) GetUser(username string) (*models.Image, error) {
-// 	var user models.Image
-
-// 	err := db.userCollection.FindOne(
-// 		context.Background(),
-// 		bson.D{
-// 			{Key: "username", Value: username},
-// 		},
-// 	).Decode(&user)
-// 	if err != nil {
-// 		log.Error().Err(err).Msg("Error retrieving user from MongoDB")
-// 		return nil, err
-// 	}
-
-// 	return &user, nil
-// }
-
-// func (db *UserMongoDB) CreateUser(user models.Image) error {
-// 	result, err := db.userCollection.InsertOne(
-// 		context.Background(),
-// 		bson.D{
-// 			{Key: "ID", Value: user.ID},
-// 			{Key: "Username", Value: user.Username},
-// 			{Key: "Password", Value: user.Password},
-// 		},
-// 	)
-// 	if err != nil {
-// 		log.Error().Err(err).Msg("Error inserting user into MongoDB")
-// 		return err
-// 	}
-
-// 	fmt.Printf("result: %v", result)
-
-// 	return nil
-// }
-
-// func (db *UserMongoDB) DeleteUser(username string) error {
-// 	_, err := db.userCollection.DeleteOne(
-// 		context.Background(),
-// 		bson.D{
-// 			{Key: "username", Value: username},
-// 		},
-// 	)
-// 	if err != nil {
-// 		log.Error().Err(err).Msg("Error deleting user from MongoDB")
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-// func (db *UserMongoDB) GetAll() ([]models.Image, error) {
-// 	var users []models.Image
-
-// 	cursor, err := db.userCollection.Find(
-// 		context.Background(),
-// 		bson.D{},
-// 	)
-// 	if err != nil {
-// 		log.Error().Err(err).Msg("Error retrieving users from MongoDB")
-// 		return nil, err
-// 	}
-
-// 	if err = cursor.All(context.Background(), &users); err != nil {
-// 		log.Error().Err(err).Msg("Error decoding users from MongoDB")
-// 	}
-
-// 	return users, nil
-// }
+	return newestImage.ImageID + 1, nil
+}

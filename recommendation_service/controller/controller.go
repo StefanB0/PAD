@@ -20,6 +20,8 @@ func NewController(service *service.RecommendationService) *Controller {
 func (c *Controller) Run() {
 	app := fiber.New()
 
+	app.Get("/status", c.status)
+
 	app.Post("/getTags", c.getTags)
 	app.Post("/getRecommendations", c.getRecommendations)
 	app.Post("/addImage", c.addImage)
@@ -27,6 +29,10 @@ func (c *Controller) Run() {
 	app.Post("/deleteALL", c.deleteAll)
 
 	app.Listen(":8083")
+}
+
+func (c *Controller) status(ctx *fiber.Ctx) error {
+	return ctx.Status(200).SendString("OK")
 }
 
 func (c *Controller) getTags(ctx *fiber.Ctx) error {
