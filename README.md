@@ -5,39 +5,56 @@
 - Author: Boicu Stefan
 - Academic group: FAF203
 
+# Lab 2 goals
+0. ***Draw new diagrams***
+1. Just be
+2. Trip circuit breaker
+3. Service high availability
+   - Solution: redundant servers
+4. Graphana + Prometheus
+5. 2 Phase commits. Affected endpoint: post image
+6. Consistent Hashing for Cache
+   - Cache image requests in several redis chaches
+   - Implement Consistent caching for these redis instances
+7. Cache High availability 
+   - Redundancies for the redis chaches
+8. Saga pattern
+9. Database redundancy
+   - Replicatoin of the image mongodb database.
+
 # Design Document
 
-##  Application Suitability
+## Running the lab
 
-This application is suitable for the microservices architecture because of several reasons. Among them the most important being scalability, fault tolerance and modularity.
+- Open the terminal in the root folder of the project
+- To build all the docker containers run `make build-all`
+- To pull all images from dockerhub run `make pull-all`
+- To run all the containers run `docker compose up -d`
+- The main access point to the system is the gateway which is revealed at port 8080
 
-- Scalability: As a platform for user generated data, the number of images hosted on the platform as well as the geographical distribution of the users can increase at a rapid pace. A microservice architecture allows for the platform to scale horizotally much more easily tahn a monolith one, thus meeting possible user demand.
-
-- Fault tolerance: A microservice architecture can be much more resilient than a monolith. Different services have different responsabilities and also run independently. If one service is temporarily unavailable, the platform as a whole might still be functional. Several duplicate services can run in parallel to manage the load better as well as provide fault tolerance in case on of them crushes.
-
-- Modularity: Problems arise as the platform has more and more users and the application will need to evolve and refactor to meet the new requirements. Microservices are modular by nature, which means that new or replacement services can be developed and deployed without the neend to stop or shutdown all the existing ones. New services can be introduced gradually.
-
-**Real examples**
-
-- Pinterest is a known website that uses microservices to manage its millions of users and their posted images.
-- Imgur and Deviantart are also image sharing platforms, but they keep their backend architecture undisclosed, so it can only be speculated that they use microservices as well.
+## Architecture choices
+- Service high availability will be achieved by running multiple servers and redirecting if a request failed
+- To aggregate data, Prometheus + Grafana will be used.
+- The saga pattern will be used for the image creation endpoint.
+- For consistent hashing, several new redis instances will be created for image requests.
+- Cache high availability will be achieved by sharing hashes between redis instances, with the system still working if half the instances go down
+- Database redundancy will be applied to the mongodb image database by using replication.
 
 ## Service Boundaries
-
-- **User service:** The user service handles user registrations, user authentification and user authorisation.
+- **User service:** The user service assures user authorisation. It lets users register and delivers timed access tokens on login.
 - **Image service:** The image service handles operations related to images. Depending on user authorisation, images can be uploaded and deleted. Images can have an optional name and short description.
-- **Feed Service:** The feed service will compile the user's interests and give him an image (or set of images) based on their preferences.
+- **Recommendation Service:** The feed service will compile the user's interests and give him an image (or set of images) based on their preferences.
 - **API Gateway:** The API Gateway will stand between the (supposed) front end of the website and the other services. It will query service discovery and then forward the requests to the user and image service.
-- **Service Discovery:** The service discovery will keep the addresses of all other services in memory and be queried by services which make requests. It will also perform load balancing
-- **Cache:** The cache will store user tokens until they expire. It will also cache an image for an hour if it is queried more than twice within 10 minutes.
+- **Service Discovery:** The service discovery will keep the addresses of all other services in memory and be queried by services which make requests. It will also perform load balancing.
+- **Cache:** The cache will store image requests for a couple of minutes in case the same image is requested again.
 
 ![Design Diagram](local/image/PAD_LAB_1.jpg)
 
 **Communication**
 
-- The user service and image service will use gRPC for communications and implement message queues.
-- The api gateway will use RESTful API to receive requests from users. It will communicate with the user and image services via gRPC.
-- The service discovery and cache will communicate via HTTP.
+- All servers use HTTP for communication
+- The gateway and service discovery use REST API
+- The image service, user service and recommendation service use RPC over HTTP
 
 ## Technology Stack
 - **User service:** Go
@@ -47,6 +64,9 @@ This application is suitable for the microservices architecture because of sever
 - **API Gateway:** Ruby on Rails.
 - **Service Discovery:** Ruby
 - **Cache:** Redis db for cache.
+- **Prometheus:** Monitor the databases and servers, compile statistics
+- **Graphana:** Pull data from prometheus and display it 
+
 
 ## Data Management
 
@@ -55,9 +75,12 @@ This application is suitable for the microservices architecture because of sever
 - Register user
 - Login user
 - Get image
+- Get image info
 - Upload image
 - Delete image
 - Modify image name or description
+- Get tags
+- Get recommended image
 
 ### User Service
 
