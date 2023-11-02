@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "482f9a46-3a2b-410f-9f5e-b616672b0534",
+		"_postman_id": "e03d0d28-3870-4e30-bcc9-ecd14145e0d5",
 		"name": "PAD",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "26255138"
@@ -29,11 +29,11 @@
 							]
 						},
 						"url": {
-							"raw": "localhost:8091/getImage",
+							"raw": "localhost:8082/getImage",
 							"host": [
 								"localhost"
 							],
-							"port": "8091",
+							"port": "8082",
 							"path": [
 								"getImage"
 							]
@@ -51,17 +51,17 @@
 							"formdata": [
 								{
 									"key": "imageID",
-									"value": "7",
+									"value": "3",
 									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "localhost:8081/getImageInfo",
+							"raw": "localhost:8082/getImageInfo",
 							"host": [
 								"localhost"
 							],
-							"port": "8081",
+							"port": "8082",
 							"path": [
 								"getImageInfo"
 							]
@@ -89,27 +89,27 @@
 								},
 								{
 									"key": "description",
-									"value": "",
+									"value": "shutterstock wolf",
 									"type": "text"
 								},
 								{
 									"key": "tags",
-									"value": "wolf",
+									"value": "tree",
 									"type": "text"
 								},
 								{
 									"key": "image",
 									"type": "file",
-									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/lab1/local/sample/wolf_shutterstock_1.jpg"
+									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/lab1/local/sample/wolf_shutterstock_2.jpg"
 								}
 							]
 						},
 						"url": {
-							"raw": "localhost:8091/uploadImage",
+							"raw": "localhost:8082/uploadImage",
 							"host": [
 								"localhost"
 							],
-							"port": "8091",
+							"port": "8082",
 							"path": [
 								"uploadImage"
 							]
@@ -133,11 +133,11 @@
 							]
 						},
 						"url": {
-							"raw": "localhost:8081/likeImage",
+							"raw": "localhost:8082/likeImage",
 							"host": [
 								"localhost"
 							],
-							"port": "8081",
+							"port": "8082",
 							"path": [
 								"likeImage"
 							]
@@ -181,11 +181,11 @@
 							]
 						},
 						"url": {
-							"raw": "localhost:8081/updateImage",
+							"raw": "localhost:8082/updateImage",
 							"host": [
 								"localhost"
 							],
-							"port": "8081",
+							"port": "8082",
 							"path": [
 								"updateImage"
 							]
@@ -209,11 +209,11 @@
 							]
 						},
 						"url": {
-							"raw": "localhost:8081/deleteImage",
+							"raw": "localhost:8082/deleteImage",
 							"host": [
 								"localhost"
 							],
-							"port": "8081",
+							"port": "8082",
 							"path": [
 								"deleteImage"
 							]
@@ -232,11 +232,11 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "localhost:8101/getTags",
+							"raw": "localhost:8083/getTags",
 							"host": [
 								"localhost"
 							],
-							"port": "8101",
+							"port": "8083",
 							"path": [
 								"getTags"
 							]
@@ -254,7 +254,7 @@
 							"formdata": [
 								{
 									"key": "tag",
-									"value": "wolf2",
+									"value": "notwolf",
 									"type": "text"
 								}
 							]
@@ -307,7 +307,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"id\": 77,\r\n    \"tags\": [\r\n        \"nature\"\r\n    ]\r\n}",
+							"raw": "{\r\n    \"id\": 4,\r\n    \"tags\": [\r\n        \"wolf\"\r\n    ]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -334,7 +334,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"id\": 66,\r\n    \"tags\": [\r\n        \"nature\",\r\n        \"tree\"\r\n    ]\r\n}",
+							"raw": "{\r\n    \"id\": 4,\r\n    \"tags\": [\r\n        \"wolf\"\r\n    ]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -421,14 +421,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/image/1",
+							"raw": "localhost:8080/image/2",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
 								"image",
-								"1"
+								"2"
 							]
 						}
 					},
@@ -489,13 +489,13 @@
 								},
 								{
 									"key": "tags",
-									"value": "wolf2",
+									"value": "notwolf",
 									"type": "text"
 								},
 								{
 									"key": "image",
 									"type": "file",
-									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/lab1/local/sample/wolf_shutterstock_2.jpg"
+									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/lab1/local/sample/wolf_shutterstock_3.jpg"
 								}
 							]
 						},
@@ -524,36 +524,6 @@
 									"key": "token",
 									"value": "\"12345\"",
 									"type": "text"
-								},
-								{
-									"key": "author",
-									"value": "\"Bob Ross\"",
-									"type": "text"
-								},
-								{
-									"key": "title",
-									"value": "\"A happy wolf\"",
-									"type": "text"
-								},
-								{
-									"key": "description",
-									"value": "\"W1\"",
-									"type": "text"
-								},
-								{
-									"key": "tags",
-									"value": "wolf",
-									"type": "text"
-								},
-								{
-									"key": "tags",
-									"value": "wolf2",
-									"type": "text"
-								},
-								{
-									"key": "image",
-									"type": "file",
-									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/lab1/local/sample/wolf_shutterstock_2.jpg"
 								}
 							]
 						},
@@ -641,17 +611,32 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "0.0.0.0:8500/service/analytics_service",
+							"raw": "localhost:8500/service/gateway_service",
 							"host": [
-								"0",
-								"0",
-								"0",
-								"0"
+								"localhost"
 							],
 							"port": "8500",
 							"path": [
 								"service",
-								"analytics_service"
+								"gateway_service"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8500/serviceall",
+							"host": [
+								"localhost"
+							],
+							"port": "8500",
+							"path": [
+								"serviceall"
 							]
 						}
 					},
@@ -663,19 +648,13 @@
 						"method": "POST",
 						"header": [],
 						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "name",
-									"value": "S1",
-									"type": "text"
-								},
-								{
-									"key": "address",
-									"value": "localhost",
-									"type": "text"
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"S1\",\r\n    \"address\": \"localhost\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
 								}
-							]
+							}
 						},
 						"url": {
 							"raw": "localhost:8500/service",
