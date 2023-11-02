@@ -21,11 +21,6 @@ func TestNewTokenService(t *testing.T) {
 	if int(tokenService.accessTokenDuration.Seconds()) != expectedAccessTokenDuration {
 		t.Errorf("Expected accessTokenDuration to be %d, got %d", expectedAccessTokenDuration, int(tokenService.accessTokenDuration.Seconds()))
 	}
-
-	expectedRefreshTokenDuration := 7200
-	if int(tokenService.refreshTokenDuration.Seconds()) != expectedRefreshTokenDuration {
-		t.Errorf("Expected refreshTokenDuration to be %d, got %d", expectedRefreshTokenDuration, int(tokenService.refreshTokenDuration.Seconds()))
-	}
 }
 
 func TestNewTokens(t *testing.T) {
@@ -37,12 +32,6 @@ func TestNewTokens(t *testing.T) {
 
 	if accessToken == "" {
 		t.Errorf("Expected accessToken to not be empty")
-	}
-
-	refreshToken := tokenService.NewRefreshToken(1, "test")
-
-	if refreshToken == "" {
-		t.Errorf("Expected refreshToken to not be empty")
 	}
 }
 
@@ -60,29 +49,6 @@ func TestVerifyAccessToken(t *testing.T) {
 
 	var userID string
 	err = pasetoAccessToken.Get("user-id", &userID)
-	if err != nil {
-		t.Errorf("Error parsing user-id %s", err.Error())
-	}
-
-	if userID != "1" {
-		t.Errorf("Expected userID to be 1, got %s", userID)
-	}	
-}
-
-func TestVerifyRefreshToken(t *testing.T) {
-	godotenv.Load("../.env")
-
-	tokenService := NewTokenService()
-
-	refreshToken := tokenService.NewRefreshToken(1, "test")
-
-	pasetoRefreshToken, err := tokenService.VerifyRefreshToken(refreshToken)
-	if err != nil {
-		t.Errorf("Error parsing refresh token %s", err.Error())
-	}
-
-	var userID string
-	err = pasetoRefreshToken.Get("user-id", &userID)
 	if err != nil {
 		t.Errorf("Error parsing user-id %s", err.Error())
 	}

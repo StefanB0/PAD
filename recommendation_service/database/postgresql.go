@@ -23,9 +23,11 @@ func NewPostgresDatabase() *AnalyticsPostgresDB {
 	user := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
 	dbName := os.Getenv("POSTGRES_DB")
-	host := os.Getenv("POSTGRES_ADDRESS") // "localhost:5432/"
+	host := os.Getenv("POSTGRES_ADDRESS") // "localhost"
+	port := os.Getenv("POSTGRES_PORT")    // ":5432"
 
-	dbURL := "postgres://" + user + ":" + password + "@" + host + dbName
+	dbURL := "postgres://" + user + ":" + password + "@" + host + port + "/" + dbName
+	log.Info().Msg(dbURL)
 
 	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
 

@@ -9,6 +9,11 @@ get '/status' do
   [200, 'OK']
 end
 
+get '/serviceall' do
+  content_type :json
+  {services: service_db.get_all_services}.to_json
+end
+
 get '/service/:name' do
   service_arr = service_db.get_service(params[:name])
   if service_arr == :invalid_service

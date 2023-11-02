@@ -4,7 +4,6 @@ import (
 	"errors"
 	"padauth/database"
 	"padauth/models"
-	"strconv"
 
 	"github.com/rs/zerolog/log"
 )
@@ -32,7 +31,6 @@ func (s *AuthService) Login(username, password string) (accessToken string, refr
 	}
 
 	accessToken = s.ts.NewAccessToken(user.ID, username)
-	refreshToken = s.ts.NewRefreshToken(user.ID, username)
 
 	err = s.cacheTokens(accessToken, refreshToken)
 	if err != nil {
@@ -62,45 +60,6 @@ func (s *AuthService) Register(username, password string) error {
 func (s *AuthService) Delete(username string) error {
 	s.db.DeleteUser(username)
 	return nil
-}
-
-func (s *AuthService) Refresh(pasetoToken string) (accessToken string, refreshToken string, err error) {
-	token, err := s.ts.VerifyRefreshToken(pasetoToken)
-	if err != nil {
-		log.Error().Err(err).Msg("Error verifying refresh token")
-		return "", "", err
-	}
-
-	var userStringID string
-	err = token.Get("user-id", &userStringID)
-	if err != nil {
-		log.Error().Err(err).Msg("Error parsing user-id")
-		return "", "", err
-	}
-
-	userID, err := strconv.Atoi(userStringID)
-	if err != nil {
-		log.Error().Err(err).Msg("Error converting user-id to int")
-		return "", "", err
-	}
-
-	var username string
-	err = token.Get("user-name", &username)
-	if err != nil {
-		log.Error().Err(err).Msg("Error parsing user-name")
-		return "", "", err
-	}
-
-	accessToken = s.ts.NewAccessToken(userID, username)
-	refreshToken = s.ts.NewRefreshToken(userID, username)
-
-	err = s.cacheTokens(accessToken, refreshToken)
-	if err != nil {
-		log.Error().Err(err).Msg("Error caching tokens")
-		return "", "", err
-	}
-
-	return accessToken, refreshToken, nil
 }
 
 func (s *AuthService) cacheTokens(accessToken string, refreshToken string) error {

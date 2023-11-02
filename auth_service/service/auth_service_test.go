@@ -105,28 +105,3 @@ func TestLoginInvalidUsername(t *testing.T) {
 		return
 	}
 }
-
-func TestRefresh(t *testing.T) {
-	authService := setup(t)
-	defer authService.db.DeleteAll()
-
-	refreshToken := authService.ts.NewRefreshToken(1, "test")
-
-	accessT, refreshT, err := authService.Refresh(refreshToken)
-	if err != nil {
-		t.Errorf("Error refreshing token: %s", err)
-		return
-	}
-
-	_, err = authService.ts.VerifyAccessToken(accessT)
-	if err != nil {
-		t.Errorf("Invalid access token: %s", err)
-		return
-	}
-
-	_, err = authService.ts.VerifyRefreshToken(refreshT)
-	if err != nil {
-		t.Errorf("Invalid refresh token: %s", err)
-		return
-	}
-}

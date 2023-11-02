@@ -13,6 +13,14 @@ class ServiceDB
   def get_service(name)
     @db[name].nil? ? :invalid_service : @db[name]
   end
+
+  def get_all_services
+    services = []
+    @db.each do |name, addresses|
+      services.push({name: name, addresses: addresses})
+    end
+    services
+  end
   
   def add_service(name, address)
     secretkey = SecureRandom.hex(16)
@@ -44,6 +52,7 @@ class ServiceDB
     @db.each do |name, addresses|
       addresses.each do |address|
         unless ping_service(address)
+          puts "Service #{name} at #{address} is offline. Removing from database."
           @db[name].delete(address)
           @secretdb.delete(name+address)
         end
@@ -52,7 +61,13 @@ class ServiceDB
   end
 
   def ping_service(address)
-    response = HTTParty.get(address + '/status')
-    response.code == 200
+    success = false
+    begin
+      response = HTTParty.get(address + '/status')
+      success = response.code == 200 && response.body == 'OK'
+    rescue Exception => e
+      puts e
+    end
+    return success
   end
 end

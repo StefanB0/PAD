@@ -22,7 +22,7 @@ class ServiceDiscovery
     # response = Net::HTTP.post_form(uri, 'name' => 'gateway_service', 'address' => 'http://localhost:8080')
     http = Net::HTTP.new(uri.host, uri.port)
     request = Net::HTTP::Post.new(uri, initheader = {'Content-Type' =>'application/json'})
-    request.body = {name: 'gateway_service', address: 'http://localhost:8080'}.to_json
+    request.body = {name: 'gateway_service', address: 'http://gateway:8080'}.to_json
     response = http.request(request)
 
     @secretkey = JSON.parse(response.body)['secret_key']

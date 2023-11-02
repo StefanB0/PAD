@@ -1,5 +1,5 @@
 # Use the official Ruby image as a base image
-FROM ruby:latest
+FROM ruby:3.2.2
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 8080
 
 # Command to run the Ruby application
-CMD ["ruby", "main.rb"]
+CMD ["bundle", "exec", "rackup", "--host", "0.0.0.0", "-p", "8080"]

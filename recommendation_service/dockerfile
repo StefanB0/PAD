@@ -1,5 +1,5 @@
 # Use the official Go image as a base image
-FROM golang:latest
+FROM golang:1.21.0-alpine
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -14,7 +14,7 @@ RUN go mod download
 RUN go build -o analytics-service
 
 # Expose the port that the application will run on
-EXPOSE 8080
+EXPOSE 8083
 
 # Command to run the executable
 CMD ["./analytics-service"]

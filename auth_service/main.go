@@ -34,3 +34,5 @@ func loadConfig() {
 		log.Fatal().Err(err).Msg("Error loading .env file")
 	}
 }
+
+// TODO remove refresh functionality

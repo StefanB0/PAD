@@ -15,7 +15,6 @@ type TokenService struct {
 	parser *paseto.Parser
 
 	accessTokenDuration  time.Duration
-	refreshTokenDuration time.Duration
 }
 
 const (
@@ -30,12 +29,6 @@ func NewTokenService() *TokenService {
 		log.Fatal().Err(err).Msg("Error parsing ACCESS_TOKEN_DURATION")
 	}
 
-	refreshTokenDurationString := os.Getenv("REFRESH_TOKEN_DURATION")
-	refreshTokenDuration, err := strconv.Atoi(refreshTokenDurationString)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Error parsing REFRESH_TOKEN_DURATION")
-	}
-
 	key, err := paseto.V4SymmetricKeyFromHex(os.Getenv("PASETO_KEY"))
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error parsing PASETO_KEY")
@@ -47,16 +40,11 @@ func NewTokenService() *TokenService {
 		key:                  key,
 		parser:               &parser,
 		accessTokenDuration:  time.Duration(accessTokenDuration) * time.Second,
-		refreshTokenDuration: time.Duration(refreshTokenDuration) * time.Second,
 	}
 }
 
 func (ts *TokenService) NewAccessToken(userID int, userName string) string {
 	return ts.NewUserToken(userID, userName, AccessTokenType, ts.accessTokenDuration)
-}
-
-func (ts *TokenService) NewRefreshToken(userID int, userName string) string {
-	return ts.NewUserToken(userID, userName, RefreshTokenType, ts.refreshTokenDuration)
 }
 
 func (ts *TokenService) NewUserToken(userID int, userName string, tokenType string, duration time.Duration) string {
@@ -76,10 +64,6 @@ func (ts *TokenService) NewUserToken(userID int, userName string, tokenType stri
 
 func (ts *TokenService) VerifyAccessToken(token string) (*paseto.Token, error) {
 	return ts.VerifyToken(token, AccessTokenType)
-}
-
-func (ts *TokenService) VerifyRefreshToken(token string) (*paseto.Token, error) {
-	return ts.VerifyToken(token, RefreshTokenType)
 }
 
 func (ts *TokenService) VerifyToken(token string, tokenType string) (*paseto.Token, error) {

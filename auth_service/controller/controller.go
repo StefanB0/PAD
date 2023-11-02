@@ -21,7 +21,6 @@ func (c *UserController) Run() {
 
 	app.Post("/login", c.login)
 	app.Post("/register", c.register)
-	app.Post("/refresh", c.refresh)
 	app.Post("/delete", c.delete)
 
 	app.Listen(":8080")
@@ -58,24 +57,6 @@ func (c *UserController) register(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(200).SendString("Success")
-}
-
-func (c *UserController) refresh(ctx *fiber.Ctx) error {
-	req := new(refreshRequest)
-	err := ctx.BodyParser(req)
-	if err != nil {
-		return ctx.Status(400).SendString("Bad request")
-	}
-
-	accessToken, refreshToken, err := c.authService.Refresh(req.RefreshToken)
-	if err != nil {
-		return ctx.Status(404).SendString(err.Error())
-	}
-
-	return ctx.Status(200).JSON(fiber.Map{
-		"accessToken":  accessToken,
-		"refreshToken": refreshToken,
-	})
 }
 
 func (c *UserController) delete(ctx *fiber.Ctx) error {
