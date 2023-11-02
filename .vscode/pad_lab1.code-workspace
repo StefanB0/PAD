@@ -1,0 +1,27 @@
+{
+  "folders": [
+		{
+			"name": "auth_service",
+			"path": "../auth_service"
+		},
+		{
+			"name": "image_service",
+			"path": "../image_service"
+		},
+		{
+			"name": "recommendation_service",
+			"path": "../recommendation_service"
+		},
+		{
+			"name": "gateway",
+			"path": "../gateway"
+		},
+		{
+			"name": "service_discovery",
+			"path": "../service_discovery"
+		},
+		{
+			"path": ".."
+		}
+	]
+}
