@@ -27,3 +27,14 @@ push-gateway:
 push-discovery:
 	docker tag discovery-service:latest stfnbcx/discovery-service:latest
 	docker push stfnbcx/discovery-service:latest
+pull-all: pull-image pull-discovery pull-gateway pull-analytics
+	@echo "Pulling all"
+pull-image:
+	@echo "Pulling image"
+	docker pull stfnbcx/image-service:latest
+pull-analytics:
+	docker pull stfnbcx/analytics-service:latest
+pull-gateway:
+	docker pull stfnbcx/gateway-service:latest
+pull-discovery:
+	docker pull stfnbcx/discovery-service:latest
