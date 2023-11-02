@@ -3,6 +3,11 @@ GEM
   specs:
     connection_pool (2.4.1)
     dotenv (2.8.1)
+    httparty (0.21.0)
+      mini_mime (>= 1.0.0)
+      multi_xml (>= 0.5.2)
+    mini_mime (1.1.5)
+    multi_xml (0.6.0)
     mustermann (3.0.0)
       ruby2_keywords (~> 0.0.1)
     nio4r (2.5.9)
@@ -29,6 +34,7 @@ PLATFORMS
 
 DEPENDENCIES
   dotenv
+  httparty
   puma
   redis
   securerandom

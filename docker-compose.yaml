@@ -1,69 +1,63 @@
 version: '3.5'
 services:
-  imag1:
-    container_name: image_service1
-    image: image-service:latest
-    command: ["./image-service", "--port=8091"]
+  # img:
+  #   image: image-service:latest
+  #   ports:
+  #     - 8081:8081
+  #   depends_on:
+  #     - imagedb
+  #     - discovery
+  
+  # analys:
+  #   image: analytics-service:latest
+  #   ports:
+  #     - "8082:8082"
+  #   depends_on:
+  #     - img
+  #     - discovery
+  #     - analyticsdb
+  
+  # discovery:
+  #   image: discovery-service:latest
+  #   ports:
+  #     - "8500:8500"
+
+  # gateway:
+  #   image: gateway-service:latest
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - discovery
+  
+  imagedb:
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=mongopassword
     ports:
-      - "8091:8091"
-    depends_on:
-      - mongo
-      - analyticsdb
-      - discovery
-  imag2:
-    container_name: image_service2
-    image: image-service:latest
-    command: ["./image-service", "--port=8092"]
+      - "27017:27017"
+    volumes:
+      - ./local/db-data/mongo-data:/data/mongo
+  
+  analyticsdb:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_DB: ANALYTICSDB
+      POSTGRES_PASSWORD: postpass
     ports:
-      - "8092:8092"
-    depends_on:
-      - mongo
-      - analyticsdb
-      - discovery
-  imag3:
-    container_name: image_service3
-    image: image-service:latest
-    command: ["./image-service", "--port=8093"]
-    ports:
-      - "8093:8093"
-    depends_on:
-      - mongo
-      - analyticsdb
-      - discovery
-  analys1:
-    container_name: analytics_service1
-    image: analytics-service:latest
-    command: ["./analytics-service", "--port=8101"]
-    ports:
-      - "8101:8101"
-    depends_on:
-      - analyticsdb
-      - discovery
-  analys2:
-    container_name: analytics_service2
-    image: analytics-service:latest
-    command: ["./analytics-service", "--port=8102"]
-    ports:
-      - "8102:8102"
-    depends_on:
-      - analyticsdb
-      - discovery
-  discovery:
-    container_name: discovery_service
-    image: discovery-service:latest
-    command: ["ruby", "main.rb"]
-    ports:
-      - "8500:8500"
-  gateway:
-    container_name: gateway_service
-    image: gateway-service:latest
-    command: ["ruby", "main.rb"]
-    ports:
-      - "8080:8080"
-    depends_on:
-      - discovery
+      - 5433:5432
+    volumes:
+      - ./local/db-data/postgres-analytics-data:/var/lib/postgresql/data
+  
+  # redis:
+  #   image: redis:latest
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - ./local/db-data/redis-db:/data/redis
+  
   userdb:
-    container_name: user_db_postgres
     image: postgres:latest
     restart: always
     environment:
@@ -74,33 +68,3 @@ services:
       - 5432:5432
     volumes:
       - ./local/db-data/postgres-user-data:/var/lib/postgresql/data
-  analyticsdb:
-    container_name: analytics_db
-    image: postgres:latest
-    restart: always
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_DB: ANALYTICSDB
-      POSTGRES_PASSWORD: postpass
-    ports:
-      - 5433:5432
-    volumes:
-      - ./local/db-data/postgres-analytics-data:/var/lib/postgresql/data
-  mongo:
-    container_name: image_db_mongo
-    image: mongo:latest
-    restart: always
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=mongopassword
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./local/db-data/mongo-data:/data/mongo
-  redis:
-    container_name: user_cache_redis
-    image: redis:latest
-    ports:
-      - "6379:6379"
-    volumes:
-      - ./local/db-data/redis-db:/data/redis
