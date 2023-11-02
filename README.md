@@ -5,25 +5,6 @@
 - Author: Boicu Stefan
 - Academic group: FAF203
 
-# Lab 2 goals
-
-- ***Draw new diagrams***
-
-1. Just be
-2. Trip circuit breaker
-3. Service high availability
-   - Solution: redundant servers
-4. Graphana + Prometheus
-5. 2 Phase commits. Affected endpoint: post image
-6. Consistent Hashing for Cache
-   - Cache image requests in several redis chaches
-   - Implement Consistent caching for these redis instances
-7. Cache High availability 
-   - Redundancies for the redis chaches
-8. Saga pattern
-9. Database redundancy
-   - Replicatoin of the image mongodb database.
-
 # Design Document
 
 ## Running the lab
