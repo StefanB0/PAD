@@ -7,46 +7,56 @@
 
 # Design Document
 
-##  Application Suitability
+## Running the lab
 
-This application is suitable for the microservices architecture because of several reasons. Among them the most important being scalability, fault tolerance and modularity.
+- Open the terminal in the root folder of the project
+- To build all the docker containers run `make build-all`
+- To pull all images from dockerhub run `make pull-all`
+- To run all the containers run `docker compose up -d`
+- The main access point to the system is the gateway which is revealed at port 8080
 
-- Scalability: As a platform for user generated data, the number of images hosted on the platform as well as the geographical distribution of the users can increase at a rapid pace. A microservice architecture allows for the platform to scale horizotally much more easily tahn a monolith one, thus meeting possible user demand.
-
-- Fault tolerance: A microservice architecture can be much more resilient than a monolith. Different services have different responsabilities and also run independently. If one service is temporarily unavailable, the platform as a whole might still be functional. Several duplicate services can run in parallel to manage the load better as well as provide fault tolerance in case on of them crushes.
-
-- Modularity: Problems arise as the platform has more and more users and the application will need to evolve and refactor to meet the new requirements. Microservices are modular by nature, which means that new or replacement services can be developed and deployed without the neend to stop or shutdown all the existing ones. New services can be introduced gradually.
-
-**Real examples**
-
-- Pinterest is a known website that uses microservices to manage its millions of users and their posted images.
-- Imgur and Deviantart are also image sharing platforms, but they keep their backend architecture undisclosed, so it can only be speculated that they use microservices as well.
+## Architecture choices
+- Service high availability will be achieved by running multiple servers and redirecting if a request failed
+- To aggregate data, Prometheus + Grafana will be used.
+- The saga pattern will be used for the image creation endpoint.
+- For consistent hashing, several new redis instances will be created for image requests.
+- Cache high availability will be achieved by sharing hashes between redis instances, with the system still working if half the instances go down
+- Database redundancy will be applied to the mongodb image database by using replication.
 
 ## Service Boundaries
-
-- **User service:** The user service handles user registrations, user authentification and user authorisation.
+- **User service:** The user service assures user authorisation. It lets users register and delivers timed access tokens on login.
 - **Image service:** The image service handles operations related to images. Depending on user authorisation, images can be uploaded and deleted. Images can have an optional name and short description.
-- **Feed Service:** The feed service will compile the user's interests and give him an image (or set of images) based on their preferences.
+- **Recommendation Service:** The feed service will compile the user's interests and give him an image (or set of images) based on their preferences.
 - **API Gateway:** The API Gateway will stand between the (supposed) front end of the website and the other services. It will query service discovery and then forward the requests to the user and image service.
-- **Service Discovery:** The service discovery will keep the addresses of all other services in memory and be queried by services which make requests. It will also perform load balancing
-- **Cache:** The cache will store user tokens until they expire. It will also cache an image for an hour if it is queried more than twice within 10 minutes.
+- **Service Discovery:** The service discovery will keep the addresses of all other services in memory and be queried by services which make requests. It will also perform load balancing.
+- **Cache:** The cache will store image requests for a couple of minutes in case the same image is requested again.
 
 ![Design Diagram](local/image/PAD_LAB_1.jpg)
 
+## Deployment and Scaling
+
+- **Docker**. All the services will be dockerised for deployment to ensure they behave in a predictable manner.
+- **Docker compose**. Scaling will be achieved by using docker compose because of its simplicity.
+
 **Communication**
 
-- The user service and image service will use gRPC for communications and implement message queues.
-- The api gateway will use RESTful API to receive requests from users. It will communicate with the user and image services via gRPC.
-- The service discovery and cache will communicate via HTTP.
+- All servers use HTTP for communication
+- The gateway and service discovery use REST API
+- The image service, user service and recommendation service use RPC over HTTP
 
 ## Technology Stack
 - **User service:** Go
-  - **User database:** MongoDB
+  - **User database:** Postresql
 - **Image service:** Go
   - **Image database:** MongoDB
+- **Recommendation service:** Go
+  - **Analytics database:** Postresql
 - **API Gateway:** Ruby on Rails.
 - **Service Discovery:** Ruby
 - **Cache:** Redis db for cache.
+- **Prometheus:** Monitor the databases and servers, compile statistics
+- **Graphana:** Pull data from prometheus and display it 
+
 
 ## Data Management
 
@@ -55,447 +65,267 @@ This application is suitable for the microservices architecture because of sever
 - Register user
 - Login user
 - Get image
+- Get image info
 - Upload image
 - Delete image
 - Modify image name or description
+- Get tags
+- Get recommended image
+- Status
+
+#### Status
+
+All services have a status endpoint that returns status code 200 and message OK.
+
+- **Endpoint:** GET `/status`
+- **Request:** None
+- **Response:** `OK`
+
+### Gateway
+
+### Get Image
+
+Retrieves the image content based on the provided ID.
+
+- **Endpoint:** GET `/image/:id`
+- **Request:** None
+- **Response:**
+  - `200 OK` with image content (JPEG)
+  - `404 Not Found` if the image is not available
+
+### Get Image Info
+
+Retrieves information about the image based on the provided ID.
+
+- **Endpoint:** GET `/image/info/:id`
+- **Request:** None
+- **Response:**
+  - `200 OK` with JSON containing image information
+  - `404 Not Found` if the image is not available
+
+### Upload Image
+
+Uploads a new image with the provided parameters.
+
+- **Endpoint:** POST `/image`
+- **Request:** Params with "token," "author," "title," "description," "tags," and "image" fields
+- **Response:**
+  - `201 Created` with JSON containing the uploaded image details
+  - Status code indicating the error if unsuccessful
+
+### Like Image
+
+Likes a specified image.
+
+- **Endpoint:** POST `/image/:id/like`
+- **Request:** Params with "id" field
+- **Response:**
+  - `200 OK` with JSON containing information about the liked image
+  - Status code indicating the error if unsuccessful
+
+### Delete Image
+
+Deletes a specified image.
+
+- **Endpoint:** DELETE `/image/:id`
+- **Request:** Params with "id" field
+- **Response:**
+  - `200 OK` with JSON containing information about the deleted image
+  - Status code indicating the error if unsuccessful
+
+### Update Image
+
+Updates information for a specified image.
+
+- **Endpoint:** PUT `/image/:id`
+- **Request:** Params with "id," "author," "title," and "description" fields
+- **Response:**
+  - `200 OK` with JSON containing information about the updated image
+  - Status code indicating the error if unsuccessful
+
+### Get Recommendations
+
+Retrieves recommendations based on a specified tag.
+
+- **Endpoint:** GET `/recommend/:tag`
+- **Request:** Params with "tag" field
+- **Response:**
+  - `200 OK` with JSON containing recommended image ID
+  - `404 Not Found` if no recommendations for the given tag
+
+### Get Tags
+
+Retrieves a list of tags.
+
+- **Endpoint:** GET `/tags`
+- **Request:** None
+- **Response:**
+  - `200 OK` with JSON containing an array of tags
+  - `404 Not Found` if the tags are not available
 
 ### User Service
 
 #### Register User
 
-- gRPC request
-
-``
-
-```json
-{
-  "name":     "Mario",
-  "password": "Mario"
-}
-
-```
-
-- gRPC response
-
-```json
-{
-  "message":  "success",
-  "error":    "error message"
-}
-
-```
-
-On success the message is "success" and the error is an empty string. On failure the message is "failure" and error messages vary.
-
-Errors will be "empty/invalid name and/or password" as well as "existing username"
-
 #### Login User
-
-- gRPC request
-
-```json
-{
-  "name":     "Mario",
-  "password": "Mario"
-}
-
-```
-
-- gRPC response
-
-```json
-{
-  "accessToken":  "abcdnndsnodnsoknfodnsfdsnflsdknfsldkn",
-  "refreshToken": "fghsadsladnsknvuoamdoxlacmnndsaiodajj",
-  "error":        "error message"
-}
-
-```
-
-On successful request the user is returned an access and refresh token. The error message is empty.
-
-On failure the user gets an error message. "Your login or password is not correct"
 
 ### Image Service
 
-#### Upload image
+### Get Image
 
-- gRPC request
+Retrieves the image content based on the provided ImageID.
 
-```json
-{
-  "imageBlob":    "0001010101010101010101010101",
-  "author":       "gilgamesh777",
-  "title":        "post-post-modern Mona Lisa", // optional
-  "description":  "A new reimagining of a classic painting" //optional
-}
+- **Endpoint:** POST `/getImage`
+- **Request:** `{ "imageID": 123 }`
+- **Response:** `200 OK`
+  - Body: Image content (JPEG)
 
-```
+### Get Image Info
 
-The requests consist of an image blob and optionally a title and a description
+Retrieves information about the image based on the provided ImageID.
 
-- gRPC response
+- **Endpoint:** POST `/getImageInfo`
+- **Request:** `{ "imageID": 123 }`
+- **Response:** `200 OK`
+  - Body: JSON containing image information (ImageID, Author, Title, Description, Tags)
 
-```json
-{
-  "message":  "success",
-  "imageID":  "ffnn990",
-  "error":    "error message"
-}
+### Upload Image
 
-```
+Allows users to upload images to the server.
 
-On success the message is success and the error is empty. On failure the message is failure and the image ID is empty. Error contains error message.
+- **Endpoint:** POST `/uploadImage`
+- **Request:** Multipart/form-data with image file and metadata
+  - author: string
+  - title: string
+  - description: string
+  - tags: string
+  - image: file with .jpg extension
+- **Response:** `201 Created`
+  - Body: JSON containing the newly created image ID
 
-#### Get image
+### Like Image
 
-- gRPC request
+Increments the like count for the specified image.
 
-```json
-{
-  "imageID": "ffnn990"
-}
+- **Endpoint:** POST `/likeImage`
+- **Request:** `{ "imageID": 123 }`
+- **Response:** `200 OK`
+  - Body: "Image liked"
 
-```
+### Update Image
 
-- gRPC response
+Updates information for the specified image.
 
-```json
-{
-  "imageBlob":    "0001010101010101010101010101",
-  "author":       "gilgamesh777",
-  "title":        "post-post-modern Mona Lisa", // if present
-  "description":  "A new reimagining of a classic painting", // if present
-  "error":        "error message"
-}
+- **Endpoint:** POST `/updateImage`
+- **Request:** accepts multiform or json
+  ```
+  {
+    token: "string",
+    imageID: 0
+    author: "string"
+    title: "string"
+    description: "string"
+  }
+  ```
+- **Response:** `200 OK`
+  - Body: "Image updated"
 
-```
+### Delete Image
 
-In case the image is present in the database, the image blob is returned. If there is no such image the image blob is empty and an error message is returned.
+Deletes the specified image.
 
-#### Modify image
+- **Endpoint:** POST `/deleteImage`
+- **Request:** JSON with token and imageID
+- **Response:** `200 OK`
+  - Body: "Image deleted"
 
-- gRPC request
-
-```json
-{
-  "imageID":      "ffnn990",
-  "title":        "post-post-modern Mona Lisa", // optional
-  "description":  "A new reimagining of a classic painting" // optional
-}
-
-```
-
-At least one between the title and the description should be present or it returns an error
-
-- gRPC response
-
-```json
-{
-  "message":  "success",
-  "error":    "error message"
-}
-
-```
-
-If the operation is successful, the "success" message is returned, otherwise an error is returned.
-
-#### Delete image
-
-- gRPC request
-
-```json
-{
-  "imageID":      "ffnn990"
-}
-
-```
-
-- gRPC response
-
-```json
-{
-  "message":  "success",
-  "error":    "error message"
-}
-
-```
-
-If the operation is successful, the "success" message is returned, otherwise an error is returned.
-
-### API Gateway
-
-The gateway mirrors the endpoints from the image and user service, but it also checks the redis cache to see if the user is authorised to perform the actions it wants to.
-
-#### Register User
-
-- http request
-- endpoint: `/signup`
-- method: POST
-
-```json
-{
-  "name":     "Mario",
-  "password": "Mario"
-}
-
-```
-
-- http response
-
-```json
-{
-  "message":  "success",
-  "error":    "error message"
-}
-
-```
-
-On success the message is "success" and the error is an empty string. On failure the message is "failure" and error messages vary.
-
-Errors will be "empty/invalid name and/or password" as well as "existing username"
-
-#### Login User
-
-- http request
-- endpoint: `/login`
-- method: POST
-
-```json
-{
-  "name":     "Mario",
-  "password": "Mario"
-}
-
-```
-
-- http response
-
-```json
-{
-  "accessToken":  "abcdnndsnodnsoknfodnsfdsnflsdknfsldkn", // as cookie
-  "refreshToken": "fghsadsladnsknvuoamdoxlacmnndsaiodajj", // as cookie
-  "error":        "error message"
-}
-
-```
-
-On successful request the user is returned an access and refresh token. The error message is empty.
-
-On failure the user gets an error message. "Your login or password is not correct"
-
-#### Refresh token
-
-#### Upload image
-
-- http request
-- endpoint: `/img`
-- method: POST
-
-```json
-{
-  "accessToken":  "abcdnndsnodnsoknfodnsfdsnflsdknfsldkn",
-  "imageBlob":    "0001010101010101010101010101",
-  "title":        "post-post-modern Mona Lisa", // optional
-  "description":  "A new reimagining of a classic painting" //optional
-}
-
-```
-
-- http response
-
-```json
-{
-  "message":  "success",
-  "imageID":  "ffnn990",
-  "error":    "error message"
-}
-
-```
-
-#### Get image
-
-- http request
-- endpoint: `/{imgID}`
-- method: GET
-
-```json
-{}
-
-```
-
-- http response
-
-```json
-{
-  "imageBlob":    "0001010101010101010101010101",
-  "author":       "gilgamesh777",
-  "title":        "post-post-modern Mona Lisa", // if present
-  "description":  "A new reimagining of a classic painting", // if present
-  "error":        "error message"
-}
-
-```
-
-In case the image is present in the database, the image blob is returned. If there is no such image the image blob is empty and an error message is returned.
-
-#### Modify image
-
-- http request
-- endpoint: `/{imgID}`
-- method: PATCH
-
-```json
-{
-  "accessToken":  "abcdnndsnodnsoknfodnsfdsnflsdknfsldkn",
-  "imageID":      "ffnn990",
-  "title":        "post-post-modern Mona Lisa", // optional
-  "description":  "A new reimagining of a classic painting" // optional
-}
-
-```
-
-At least one between the title and the description should be present or it returns an error
-
-- http response
-
-```json
-{
-  "message":  "success",
-  "error":    "error message"
-}
-
-```
-
-If the operation is successful, the "success" message is returned, otherwise an error is returned.
-
-#### Delete image
-
-- http request
-- endpoint: `/{imgID}`
-- method: DELETE
-
-```json
-{
-  "accessToken":  "abcdnndsnodnsoknfodnsfdsnflsdknfsldkn",
-  "imageID":      "ffnn990"
-}
-
-```
-
-- http response
-
-```json
-{
-  "message":  "success",
-  "error":    "error message"
-}
-
-```
 
 ### Service Discovery
 
-#### Get Service
+#### Get All Services
 
-- http request
-- endpoint: `/service`
-- method: GET
+Retrieves information about all services.
 
-```json
-{
-  "serviceName": "USER SERVICE"
-}
+- **Endpoint:** GET `/serviceall`
+- **Request:** None
+- **Response:** `200 OK`
+  - Body: JSON containing information about all services
 
-```
+#### Get Service by Name
 
-- http response
+Retrieves information about a specific service by name.
 
-```json
-{
-  "host":       "localhost:3799",
-  "connTicket": "B17A90JKL"
-}
+- **Endpoint:** GET `/service/:name`
+- **Request:** None
+- **Response:** 
+  - `200 OK` with JSON containing information about the service
+  - `404 Not Found` if the service is invalid
 
-```
+#### Add Service
 
-The user service is only available on the private network. A service asks for what it wants to acces and the service discovery returns the address and a ticket, while also performing load balancing.
+Adds a new service with the provided name and address.
 
-After closing a connection, the respective service should close the connection ticket
+- **Endpoint:** POST `/service`
+- **Request:** JSON with "name" and "address" fields
+- **Response:**
+  - `201 Created` with JSON containing the secret key
+  - `400 Bad Request` if the request is missing required fields
 
-#### Close ticket
+#### Remove Service
 
-- http request
-- endpoint: `/ticket`
-- method: POST
+Removes a service by name.
 
-```json
-{
-  "connTicket": "B17A90JKL"
-}
+- **Endpoint:** DELETE `/service/:name`
+- **Request:** Params with "name," "address," and "secretkey"
+- **Response:**
+  - `200 OK` if the service is successfully removed
+  - `401 Unauthorized` if removal is unauthorized
 
-```
+### Recommendation service
 
-- http response
+#### Get Tags
 
-```json
-{
-  "message":  "success",
-  "error":    "error message"
-}
+Retrieves a list of tags.
 
-```
+- **Endpoint:** POST `/getTags`
+- **Request:** None
+- **Response:** `200 OK`
+  - Body: JSON containing an array of tags
 
-#### Add service
+#### Get Recommendations
 
-- http request
-- endpoint: `/service`
-- method: POST
+Retrieves recommendations based on a specified tag.
 
-```json
-{
-  "serviceName": "USER SERVICE",
-  "host": "localhost:3799"
-}
+- **Endpoint:** POST `/getRecommendations`
+- **Request:** JSON with "tag" field
+- **Response:** 
+  - `200 OK` with JSON containing recommended image ID
+  - `404 Not Found` if there are no recommendations for the given tag
 
-```
+#### Add Image
 
-- http response
+Adds a new image with the provided ID and tags.
 
-```json
-{
-  "message":  "success",
-  "error":    "error message"
-}
+- **Endpoint:** POST `/addImage`
+- **Request:** JSON with "id" and "tags" fields
+- **Response:** `201 Created`
+  - Body: "Image added"
 
-```
+#### Update Image
 
-#### Remove service
+Updates the views and likes for a specified image.
 
-- http request
-- endpoint: `/service`
-- method: DELETE
+- **Endpoint:** POST `/updateImage`
+- **Request:** JSON with "id," "views," and "likes" fields
+- **Response:** `200 OK`
+  - Body: "Image updated"
 
-```json
-{
-  "serviceName": "USER SERVICE",
-  "host": "localhost:3799"
-}
+#### Delete All Data
 
-```
+Deletes all data.
 
-- http response
+- **Endpoint:** POST `/deleteALL`
+- **Request:** None
+- **Response:** `200 OK`
+  - Body: "All data deleted"
 
-```json
-{
-  "message":  "success",
-  "error":    "error message"
-}
-
-```
-
-This method is used when a service performs a graceful shutdown. If a service crashes the Service Discovery will detect it using the heartbeat algorithm.
-
-## Deployment and Scaling
-
-- **Docker**. All the services will be dockerised for deployment to ensure they behave in a predictable manner.
-- **Docker compose**. Scaling will be achieved by using docker compose because of its simplicity.

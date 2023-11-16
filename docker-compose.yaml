@@ -15,6 +15,15 @@ services:
       - imagedb
       - discovery
     command: ["./image-service", "--host=img", "--docker=true"]
+
+  img2:
+    image: image-service:latest
+    ports:
+      - 8092:8082
+    depends_on:
+      - imagedb
+      - discovery
+    command: ["./image-service", "--host=img2", "--docker=true"]
   
   analys:
     image: analytics-service:latest
