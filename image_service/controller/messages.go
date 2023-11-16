@@ -14,6 +14,7 @@ type getImageResponse struct {
 
 type uploadRequest struct {
 	Token       string   `json:"token"`
+	SagaID      string   `json:"sagaid"`
 	Author      string   `json:"author"`
 	Title       string   `json:"title"`
 	Description string   `json:"description"`

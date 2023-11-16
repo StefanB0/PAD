@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"padimage/models"
+
+	"github.com/rs/zerolog/log"
 )
 
 type DiscoveryService struct {
@@ -30,6 +32,7 @@ func (s *DiscoveryService) Subscribe() error {
 
 	res, err := http.Post(s.address+"/service", "application/json", payload)
 	if err != nil {
+		log.Error().Err(err).Msg("Error subscribing to discovery service")
 		return err
 	}
 

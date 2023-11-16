@@ -1,8 +1,14 @@
 package service
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
+	"net/http"
+	"os"
 	"padimage/database"
 	"padimage/models"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 )
@@ -11,13 +17,16 @@ type ImageService struct {
 	db *database.ImageMongoDB
 	as *AnalyticsService
 	ts *TokenService
+
+	transactions map[string]int
 }
 
 func NewImageService(db *database.ImageMongoDB, as *AnalyticsService, ts *TokenService) *ImageService {
 	return &ImageService{
-		db: db,
-		as: as,
-		ts: ts,
+		db:           db,
+		as:           as,
+		ts:           ts,
+		transactions: make(map[string]int),
 	}
 }
 
@@ -33,7 +42,17 @@ func (s *ImageService) CreateImage(image models.Image, token string) (int, error
 	}
 
 	id, err := s.db.CreateImage(image)
-	s.as.AddImage(id, image.Tags)
+	if err != nil {
+		log.Error().Err(err).Msg("Error creating image")
+		return 0, err
+	}
+
+	err = s.as.AddImage(id, image.Tags)
+	if err != nil {
+		s.db.DeleteImage(int64(id))
+		log.Error().Err(err).Msg("Error adding image to analytics")
+		return 0, err
+	}
 
 	return id, err
 }
@@ -78,4 +97,73 @@ func (s *ImageService) GetImagesByTag(tag string) ([]int, error) {
 
 func (s *ImageService) DeleteAllImages() error {
 	return s.db.DeleteAll()
+}
+
+func (s *ImageService) AddSagaTransaction(sagaID string, imageID int) {
+	s.transactions[sagaID] = imageID
+}
+
+func (s *ImageService) RevertSagaTransaction(sagaID string) error {
+	imageID := s.transactions[sagaID]
+	return s.db.DeleteImage(int64(imageID))
+}
+
+func (s *ImageService) ConfirmSagaTransaction(sagaID string) error {
+	gateway := os.Getenv("GATEWAY_ADDRESS")
+	url := fmt.Sprintf("http://%s/transaction/%s", gateway, sagaID)
+	payload := []byte(`{"status": "success", "service": "image_service"}`)
+
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(payload))
+	if err != nil {
+		log.Error().Err(err).Msg("Error creating SAGA CONFIRM request")
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		log.Error().Err(err).Msg("Error sending SAGA CONFIRM request")
+		return err
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		log.Error().Err(err).Msg("Error sending SAGA CONFIRM request. Status code: " + strconv.Itoa(res.StatusCode))
+		return errors.New("Error sending SAGA CONFIRM request. Status code: " + strconv.Itoa(res.StatusCode))
+	}
+
+	return nil
+}
+
+func (s *ImageService) CancelSagaTransaction(sagaID string) error {
+	gateway := os.Getenv("GATEWAY_ADDRESS")
+	url := fmt.Sprintf("http://%s/transaction/%s", gateway, sagaID)
+	payload := []byte(`{"status": "failure", "service": "image_service"}`)
+
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(payload))
+	if err != nil {
+		log.Error().Err(err).Msg("Error creating SAGA CANCEL request")
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		log.Error().Err(err).Msg("Error sending SAGA CANCEL request")
+		return err
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		log.Error().Err(err).Msg("Error sending SAGA CANCEL request. Status code: " + strconv.Itoa(res.StatusCode))
+		return errors.New("Error sending SAGA CANCEL request. Status code: " + strconv.Itoa(res.StatusCode))
+	}
+
+	return nil
 }

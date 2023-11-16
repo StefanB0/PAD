@@ -33,6 +33,8 @@ func NewMongoDB() *ImageMongoDB {
 		return nil
 	}
 
+	log.Info().Msg("Connected to MongoDB")
+
 	userDB := client.Database("ImageDB")
 	userCollection := userDB.Collection("images")
 
@@ -85,7 +87,7 @@ func (db *ImageMongoDB) CreateImage(image models.Image) (int, error) {
 	err = db.userCollection.FindOne(context.Background(), bson.D{
 		{Key: "_id", Value: res.InsertedID},
 	}).Decode(&image)
-	
+
 	return image.ImageID, nil
 }
 

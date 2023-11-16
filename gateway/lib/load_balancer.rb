@@ -7,9 +7,9 @@ class LoadBalancer
   end
 
   def query_service_discovery
-    img_svc_address = @service_discovery.get_service_address(@name)
-    unless img_svc_address.nil? || img_svc_address.empty?
-      @items = JSON.parse(img_svc_address)['services']
+    svc_address = @service_discovery.get_service_address(@name)
+    unless svc_address.nil? || svc_address.empty?
+      @items = JSON.parse(svc_address)['services']
       self.add_item(@items)
     end
   end
