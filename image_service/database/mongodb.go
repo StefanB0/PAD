@@ -87,7 +87,7 @@ func (db *ImageMongoDB) CreateImage(image models.Image) (int, error) {
 	err = db.userCollection.FindOne(context.Background(), bson.D{
 		{Key: "_id", Value: res.InsertedID},
 	}).Decode(&image)
-	
+
 	return image.ImageID, nil
 }
 
