@@ -33,6 +33,8 @@ func NewMongoDB() *ImageMongoDB {
 		return nil
 	}
 
+	log.Info().Msg("Connected to MongoDB")
+
 	userDB := client.Database("ImageDB")
 	userCollection := userDB.Collection("images")
 

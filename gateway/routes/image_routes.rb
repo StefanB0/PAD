@@ -8,8 +8,10 @@ require 'logger'
 require_relative '../lib/redis.rb'
 require_relative '../lib/service_discovery.rb'
 require_relative '../lib/load_balancer.rb'
+require_relative '../lib/saga_manager.rb'
 
 redisCache = RedisCache.instance
+sagaManager = SagaManager.instance
 
 # service_discovery = ServiceDiscovery.instance
 
@@ -62,6 +64,8 @@ end
 post '/image' do
   url = "#{load_balancer.next_item}/uploadImage"
 
+  sagaid = sagaManager.new_transaction(['image_service', 'analytics_service'])
+
   response = HTTParty.post(url, {
     body: {
       token: params[:token],
@@ -69,7 +73,8 @@ post '/image' do
       title: params[:title],
       description: params[:description],
       tags: params[:tags],
-      image: params[:image][:tempfile]
+      image: params[:image][:tempfile],
+      sagaid: sagaid
     },
     headers: {
       'Content-Type' => 'multipart/form-data'
@@ -146,8 +151,14 @@ put '/image/:id' do
   res.body                                   
 end
 
-# rpc GetImage(GetImageRequest) returns (GetImageResponse) {}
-# rpc UploadImage(UploadImageRequest) returns (UploadImageResponse) {}
-# rpc DeleteImage(DeleteImageRequest) returns (DeleteImageResponse) {}
-# rpc ModifyImage(ModifyImageRequest) returns (ModifyImageResponse) {}
-# rpc GetImageList(GetImageListRequest) returns (GetImageListResponse) {}
+put '/transaction/:id' do
+  req_body = JSON.parse(request.body.read)
+  
+  id = params['id']
+  service = req_body['service']
+  status = req_body['status']
+
+  sagaManager.update_transaction(id, service, status)
+
+  200
+end

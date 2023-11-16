@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "e03d0d28-3870-4e30-bcc9-ecd14145e0d5",
+		"_postman_id": "a8e3e22b-72a4-434f-ada7-1434f6b947b1",
 		"name": "PAD",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "26255138"
@@ -100,7 +100,12 @@
 								{
 									"key": "image",
 									"type": "file",
-									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/lab1/local/sample/wolf_shutterstock_2.jpg"
+									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/labs/local/sample/tree_shutterstock_1.jpg"
+								},
+								{
+									"key": "sagaID",
+									"value": "FFXSA",
+									"type": "text"
 								}
 							]
 						},
@@ -421,14 +426,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/image/2",
+							"raw": "localhost:8080/image/21",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
 								"image",
-								"2"
+								"21"
 							]
 						}
 					},
@@ -495,7 +500,7 @@
 								{
 									"key": "image",
 									"type": "file",
-									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/lab1/local/sample/wolf_shutterstock_3.jpg"
+									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/labs/local/sample/wolf_shutterstock_2.jpg"
 								}
 							]
 						},
@@ -697,6 +702,30 @@
 									"key": "secretkey",
 									"value": "5f7c181e9f4b0e6c7f20ecf934ba6435"
 								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Saga",
+			"item": [
+				{
+					"name": "Revert Image Service",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8082/transaction/FFXSA",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"transaction",
+								"FFXSA"
 							]
 						}
 					},

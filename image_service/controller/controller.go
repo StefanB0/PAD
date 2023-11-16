@@ -1,11 +1,13 @@
 package controller
 
 import (
-	"log"
+	// "log"
+	"fmt"
 	"padimage/models"
 	"padimage/service"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
 )
 
 type ImageController struct {
@@ -34,6 +36,7 @@ func (c *ImageController) Run(port string) {
 	app.Post("/updateImage", c.update)
 	app.Post("/deleteImage", c.delete)
 
+	app.Delete("/transaction/:id", c.revertTransaction)
 	app.Listen(port)
 }
 
@@ -116,6 +119,7 @@ func (c *ImageController) upload(ctx *fiber.Ctx) error {
 	req.Title = form.Value["title"][0]
 	req.Description = form.Value["description"][0]
 	req.Tags = form.Value["tags"]
+	req.SagaID = form.Value["sagaid"][0]
 
 	fileheader, err := ctx.FormFile("image")
 	if err != nil {
@@ -142,9 +146,15 @@ func (c *ImageController) upload(ctx *fiber.Ctx) error {
 	}
 
 	id, err := c.imageService.CreateImage(image, req.Token)
+
+	c.imageService.AddSagaTransaction(req.SagaID, id)
+	
 	if err != nil {
-		return ctx.Status(404).SendString(err.Error())
+		c.imageService.CancelSagaTransaction(req.SagaID)	
+		return ctx.Status(503).SendString("Service unavailable")
 	}
+	
+	c.imageService.ConfirmSagaTransaction(req.SagaID)
 
 	ctx.Set("Content-Type", "application/json")
 
@@ -230,4 +240,20 @@ func (c *ImageController) deleteAll(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(200).SendString("All images deleted")
+}
+
+func (c *ImageController) revertTransaction(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+
+	id := ctx.Params("id")
+
+	err := c.imageService.RevertSagaTransaction(id)
+	if err != nil {
+		return ctx.Status(404).SendString(err.Error())
+	}
+
+	log.Info().Msg(fmt.Sprintf("Transaction %s reverted", id))
+
+	return ctx.Status(200).SendString("Transaction reverted")
 }
