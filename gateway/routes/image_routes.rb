@@ -88,6 +88,11 @@ post '/image' do
     return response.code.to_i
   end
 
+  unless sagaManager.check_transaction(sagaid)
+    logger.error "Error: Saga failed"
+    return 500
+  end
+
   content_type :json
   [201, response.body]
 end

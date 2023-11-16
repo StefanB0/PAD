@@ -1,11 +1,13 @@
 package controller
 
 import (
-	"log"
+	"fmt"
 	"padrecommendations/models"
 	"padrecommendations/service"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
 )
 
 type Controller struct {
@@ -30,6 +32,8 @@ func (c *Controller) Run(port string) {
 	app.Post("/addImage", c.addImage)
 	app.Post("/updateImage", c.updateImage)
 	app.Post("/deleteALL", c.deleteAll)
+
+	app.Delete("/transaction/:id", c.revertTransaction)
 
 	app.Listen(":8083")
 }
@@ -83,8 +87,15 @@ func (c *Controller) addImage(ctx *fiber.Ctx) error {
 		ImageID: req.ID,
 		Tags:    req.Tags,
 	}
-	c.rs.AddImage(image)
-	log.Printf("Added image %d with tags %v", req.ID, req.Tags)
+
+	err = c.rs.AddImage(image)
+	if err != nil {
+		c.rs.CancelSagaTransaction(req.SagaID)
+		return ctx.Status(500).SendString("Server Error")
+	}
+
+	log.Info().Msg("Added image " + strconv.Itoa(req.ID) + " with tags " + fmt.Sprintf("%v", req.Tags))
+	c.rs.ConfirmSagaTransaction(req.SagaID)
 
 	return ctx.Status(201).SendString("Image added")
 }
@@ -108,8 +119,24 @@ func (c *Controller) updateImage(ctx *fiber.Ctx) error {
 func (c *Controller) deleteAll(ctx *fiber.Ctx) error {
 	c.semaphore.Acquire()
 	defer c.semaphore.Release()
-	
+
 	c.rs.DeleteAll()
 
 	return ctx.Status(200).SendString("All data deleted")
+}
+
+func (c *Controller) revertTransaction(ctx *fiber.Ctx) error {
+	c.semaphore.Acquire()
+	defer c.semaphore.Release()
+
+	id := ctx.Params("id")
+
+	err := c.rs.RevertSagaTransaction(id)
+	if err != nil {
+		return ctx.Status(404).SendString(err.Error())
+	}
+
+	log.Info().Msg(fmt.Sprintf("Transaction %s reverted", id))
+
+	return ctx.Status(200).SendString("Transaction reverted")
 }

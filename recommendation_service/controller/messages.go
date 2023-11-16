@@ -9,12 +9,13 @@ type recommendRequest struct {
 }
 
 type addImageRequest struct {
-	ID   int      `json:"id"`
-	Tags []string `json:"tags"`
+	ID     int      `json:"id"`
+	SagaID string   `json:"sagaid"`
+	Tags   []string `json:"tags"`
 }
 
 type updateImageRequest struct {
-	ID   int      `json:"id"`
-	Views int     `json:"views"`
-	Likes int     `json:"likes"`
+	ID    int `json:"id"`
+	Views int `json:"views"`
+	Likes int `json:"likes"`
 }
