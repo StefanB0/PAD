@@ -1,19 +1,29 @@
 package service
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"math/rand"
+	"net/http"
+	"os"
 	"padrecommendations/database"
 	"padrecommendations/models"
+	"strconv"
+
+	"github.com/rs/zerolog/log"
 )
 
 type RecommendationService struct {
 	analyticsDB *database.AnalyticsPostgresDB
+
+	transactionList map[string]int
 }
 
 func NewRecommendationService(analyticsDB *database.AnalyticsPostgresDB) *RecommendationService {
 	return &RecommendationService{
-		analyticsDB: analyticsDB,
+		analyticsDB:     analyticsDB,
+		transactionList: make(map[string]int),
 	}
 }
 
@@ -54,10 +64,16 @@ func (s *RecommendationService) GetRecommendations(tagname string) (int, error) 
 	return randImage, nil
 }
 
-func (s *RecommendationService) AddImage(image models.Image) {
+func (s *RecommendationService) AddImage(image models.Image) error {
 	image.Engagement = image.Views + image.Likes
 	image.Engagement += 100
-	s.analyticsDB.AddImage(image)
+	err := s.analyticsDB.AddImage(image)
+	if err != nil {
+		log.Err(err).Msg("Error adding image")
+		return err
+	}
+
+	return nil
 }
 
 func (service *RecommendationService) AddView(imageID int, views int) {
@@ -80,4 +96,57 @@ func (s *RecommendationService) AddLike(imageID int, likes int) {
 
 func (s *RecommendationService) DeleteAll() {
 	s.analyticsDB.DeleteAll()
+}
+
+func (s *RecommendationService) RevertSagaTransaction(id string) error {
+	imgageID := s.transactionList[id]
+	err := s.analyticsDB.DeleteImage(imgageID)
+	if err != nil {
+		log.Err(err).Msg("Error reverting transaction")
+		return err
+	}
+
+	return nil
+}
+
+func (s *RecommendationService) AddTransaction(id string, imageID int) {
+	s.transactionList[id] = imageID
+}
+
+func (s *RecommendationService) ConfirmSagaTransaction(id string) error {
+	return s.PutSagaTransaction(id, "success")
+}
+
+func (s *RecommendationService) CancelSagaTransaction(id string) error {
+	return s.PutSagaTransaction(id, "failure")
+}
+
+func (s *RecommendationService) PutSagaTransaction(id string, status string) error {
+	gateway := os.Getenv("GATEWAY_ADDRESS")
+	url := fmt.Sprintf("http://%s/transaction/%s", gateway, id)
+	payload := []byte(fmt.Sprintf(`{"status": "%s", "service": "analytics_service"}`, status))
+
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(payload))
+	if err != nil {
+		log.Err(err).Msg("Error creating request")
+		return err
+	}
+
+	client := &http.Client{}
+
+	res, err := client.Do(req)
+
+	if err != nil {
+		log.Err(err).Msg("Error sending request")
+		return err
+	}
+
+	defer req.Body.Close()
+
+	if res.StatusCode != 200 {
+		log.Error().Err(err).Msg("Error sending SAGA CANCEL request. Status code: " + strconv.Itoa(res.StatusCode))
+		return errors.New("Error sending SAGA CANCEL request. Status code: " + strconv.Itoa(res.StatusCode))
+	}
+
+	return nil
 }

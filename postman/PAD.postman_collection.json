@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "a8e3e22b-72a4-434f-ada7-1434f6b947b1",
+		"_postman_id": "e736c5c5-47ce-4a3c-873e-fd6f43d2a814",
 		"name": "PAD",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "26255138"
@@ -426,14 +426,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/image/21",
+							"raw": "localhost:8080/image/16",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
 								"image",
-								"21"
+								"16"
 							]
 						}
 					},
@@ -500,7 +500,7 @@
 								{
 									"key": "image",
 									"type": "file",
-									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/labs/local/sample/wolf_shutterstock_2.jpg"
+									"src": "/C:/Users/zero/Documents/University/Semester_7/PAD/labs/local/sample/wolf_shutterstock_2.jpg"
 								}
 							]
 						},

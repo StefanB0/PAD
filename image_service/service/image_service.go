@@ -34,7 +34,7 @@ func (s *ImageService) GetImage(imageID int) (*models.Image, error) {
 	return s.db.GetImage(imageID)
 }
 
-func (s *ImageService) CreateImage(image models.Image, token string) (int, error) {
+func (s *ImageService) CreateImage(image models.Image, sagaID string, token string) (int, error) {
 	_, err := s.ts.VerifyAccessToken(token)
 	if err != nil {
 		log.Error().Err(err).Msg("Error verifying access token")
@@ -47,7 +47,14 @@ func (s *ImageService) CreateImage(image models.Image, token string) (int, error
 		return 0, err
 	}
 
-	err = s.as.AddImage(id, image.Tags)
+	s.AddSagaTransaction(sagaID, id)
+
+	err = s.ConfirmSagaTransaction(sagaID)
+	if err != nil {
+		log.Error().Err(err).Msg("Image service coulndn't confirm SAGA transaction")
+	}
+
+	err = s.as.AddImage(id, sagaID, image.Tags)
 	if err != nil {
 		s.db.DeleteImage(int64(id))
 		log.Error().Err(err).Msg("Error adding image to analytics")
@@ -105,6 +112,7 @@ func (s *ImageService) AddSagaTransaction(sagaID string, imageID int) {
 
 func (s *ImageService) RevertSagaTransaction(sagaID string) error {
 	imageID := s.transactions[sagaID]
+	log.Info().Msg("Reverting transaction for image: " + strconv.Itoa(imageID))
 	return s.db.DeleteImage(int64(imageID))
 }
 

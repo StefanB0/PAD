@@ -62,7 +62,7 @@ func (s *AnalyticsService) AddEngagement(imageID, views, likes int) error {
 	return nil
 }
 
-func (s *AnalyticsService) AddImage(imageID int, tags []string) error {
+func (s *AnalyticsService) AddImage(imageID int, sagaID string, tags []string) error {
 	s.UpdateLoadBalancer()
 	url := s.ls.GetItem()
 
@@ -74,6 +74,7 @@ func (s *AnalyticsService) AddImage(imageID int, tags []string) error {
 	body := fiber.Map{
 		"id":   imageID,
 		"tags": tags,
+		"sagaid": sagaID,
 	}
 
 	buffer := new(bytes.Buffer)

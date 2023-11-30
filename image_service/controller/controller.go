@@ -37,6 +37,7 @@ func (c *ImageController) Run(port string) {
 	app.Post("/deleteImage", c.delete)
 
 	app.Delete("/transaction/:id", c.revertTransaction)
+
 	app.Listen(port)
 }
 
@@ -114,6 +115,9 @@ func (c *ImageController) upload(ctx *fiber.Ctx) error {
 	if temp := form.Value["tags"]; len(temp) == 0 {
 		return ctx.Status(400).SendString("Bad request. Missing tags field")
 	}
+	if temp := form.Value["sagaid"]; len(temp) == 0 {
+		return ctx.Status(400).SendString("Bad request. Missing Saga ID")
+	}
 
 	req.Author = form.Value["author"][0]
 	req.Title = form.Value["title"][0]
@@ -145,16 +149,14 @@ func (c *ImageController) upload(ctx *fiber.Ctx) error {
 		ImageChunk:  req.ImageBytes,
 	}
 
-	id, err := c.imageService.CreateImage(image, req.Token)
+	id, err := c.imageService.CreateImage(image, req.SagaID, req.Token)
 
 	c.imageService.AddSagaTransaction(req.SagaID, id)
-	
+
 	if err != nil {
-		c.imageService.CancelSagaTransaction(req.SagaID)	
+		c.imageService.CancelSagaTransaction(req.SagaID)
 		return ctx.Status(503).SendString("Service unavailable")
 	}
-	
-	c.imageService.ConfirmSagaTransaction(req.SagaID)
 
 	ctx.Set("Content-Type", "application/json")
 

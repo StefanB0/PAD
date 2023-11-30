@@ -1,0 +1,23 @@
+version: '3'
+services:
+  primary:
+    image: mongo
+    container_name: mongodb_primary
+    ports:
+      - "27027:27017"
+    volumes:
+      - primary_data:/data/db
+    command: "--replSet rs0"
+
+  secondary:
+    image: mongo
+    container_name: mongodb_secondary
+    ports:
+      - "27028:27017"
+    volumes:
+      - secondary_data:/data/db
+    command: "--replSet rs0"
+
+volumes:
+  primary_data:
+  secondary_data:

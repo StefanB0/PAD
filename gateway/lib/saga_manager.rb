@@ -36,6 +36,19 @@ class SagaManager
     @saga_ledger[transaction_id]
   end
 
+  def check_transaction(transaction_id)
+    transaction_success = true
+
+    @saga_ledger[transaction_id].each do |service, status|
+      if status[:status] == 'failure'
+        transaction_success = false
+        break
+      end
+    end
+
+    transaction_success
+  end
+
   def update_transaction(transaction_id, service, status)
     if @saga_ledger[transaction_id].nil?
       @logger.info("Transaction #{transaction_id} not found")
@@ -47,7 +60,6 @@ class SagaManager
     if status == 'failure'
       @logger.info("Transaction #{transaction_id} for service #{service} failed")
       self.revert_transaction(transaction_id)
-      @saga_ledger.delete(transaction_id)
     elsif status == 'success'
       @logger.info("Transaction #{transaction_id} for service #{service} completed successfully")
     end
@@ -57,8 +69,11 @@ class SagaManager
     @saga_ledger[transaction_id].each do |service, status|
       if status[:status] == 'success'
         addresses = @service_discovery.get_service_address(service)
+        addresses = JSON.parse(addresses)
+
         address = addresses["services"].first
-        HTTParty.delete("http://#{address}/transaction/#{transaction_id}")
+        @logger.info("Reverting transaction #{transaction_id} for service #{service} at #{address}")
+        HTTParty.delete("#{address}/transaction/#{transaction_id}")
       end
     end
   end

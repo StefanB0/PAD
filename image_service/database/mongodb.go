@@ -92,6 +92,7 @@ func (db *ImageMongoDB) CreateImage(image models.Image) (int, error) {
 }
 
 func (db *ImageMongoDB) DeleteImage(imageID int64) error {
+	log.Info().Msg("Deleting image " + strconv.Itoa(int(imageID)))	
 	_, err := db.userCollection.DeleteOne(
 		context.Background(),
 		bson.D{
