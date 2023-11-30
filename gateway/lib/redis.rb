@@ -7,8 +7,9 @@ Dotenv.load('.env')
 class RedisCache 
   include Singleton
 
-  def initialize
+  def initialize(host="localhost", port=6379)
     @redis = Redis.new(:timeout => ENV['REDIS_TIMEOUT'].to_i)
+    redis = Redis.new(host: host, port: port, timeout: ENV['REDIS_TIMEOUT'].to_i)
   end
 
   def check_token(access_token)
