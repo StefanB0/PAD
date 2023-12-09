@@ -23,7 +23,7 @@
 							"formdata": [
 								{
 									"key": "imageID",
-									"value": "1",
+									"value": "5",
 									"type": "text"
 								}
 							]
@@ -221,6 +221,37 @@
 							"port": "8082",
 							"path": [
 								"deleteImage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Block",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "localhost:8082/block?duration=20",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"block"
+							],
+							"query": [
+								{
+									"key": "duration",
+									"value": "20"
+								}
 							]
 						}
 					},
@@ -426,14 +457,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/image/16",
+							"raw": "localhost:8080/image/3",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
 								"image",
-								"16"
+								"3"
 							]
 						}
 					},
@@ -479,7 +510,7 @@
 								},
 								{
 									"key": "title",
-									"value": "\"A happy wolf\"",
+									"value": "\"A Stoic wolf\"",
 									"type": "text"
 								},
 								{
@@ -493,14 +524,9 @@
 									"type": "text"
 								},
 								{
-									"key": "tags",
-									"value": "notwolf",
-									"type": "text"
-								},
-								{
 									"key": "image",
 									"type": "file",
-									"src": "/C:/Users/zero/Documents/University/Semester_7/PAD/labs/local/sample/wolf_shutterstock_2.jpg"
+									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/labs/local/sample/wolf_shutterstock_1.jpg"
 								}
 							]
 						},
@@ -548,6 +574,39 @@
 					"response": []
 				},
 				{
+					"name": "Add redis cache",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "node_name",
+									"value": "Redis3",
+									"type": "text"
+								},
+								{
+									"key": "node_address",
+									"value": "localhost:6381",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/cache",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"cache"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Update Image",
 					"request": {
 						"method": "PUT",
@@ -587,19 +646,24 @@
 					"response": []
 				},
 				{
-					"name": "Delete Image",
+					"name": "Delete redis cache",
 					"request": {
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "localhost:8080/image/3",
+							"raw": "localhost:8080/cache?node_name=Redis1",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"image",
-								"3"
+								"cache"
+							],
+							"query": [
+								{
+									"key": "node_name",
+									"value": "Redis1"
+								}
 							]
 						}
 					},
