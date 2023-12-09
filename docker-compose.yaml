@@ -1,7 +1,7 @@
 version: '3.5'
 services:
   gateway:
-    image: gateway-service:latest
+    image: stfnbcx/gateway-service:latest
     ports:
       - "8080:8080"
     depends_on:
@@ -11,7 +11,7 @@ services:
       - redis3
   
   img:
-    image: image-service:latest
+    image: stfnbcx/image-service:latest
     ports:
       - 8082:8082
     depends_on:
@@ -19,7 +19,7 @@ services:
       - discovery
     command: ["./image-service", "--host=img", "--docker=true"]
   img2:
-    image: image-service:latest
+    image: stfnbcx/image-service:latest
     ports:
       - 8092:8082
     depends_on:
@@ -27,7 +27,7 @@ services:
       - discovery
     command: ["./image-service", "--host=img2", "--docker=true"]
   img3:
-    image: image-service:latest
+    image: stfnbcx/image-service:latest
     ports:
       - 8093:8082
     depends_on:
@@ -36,7 +36,7 @@ services:
     command: ["./image-service", "--host=img3", "--docker=true"]
   
   analys:
-    image: analytics-service:latest
+    image: stfnbcx/analytics-service:latest
     ports:
       - "8083:8083"
     depends_on:
@@ -45,7 +45,7 @@ services:
       - analyticsdb
     command: ["./analytics-service", "--host=analys", "--docker=true"]
   analys2:
-    image: analytics-service:latest
+    image: stfnbcx/analytics-service:latest
     ports:
       - "8102:8083"
     depends_on:
@@ -54,7 +54,7 @@ services:
       - analyticsdb
     command: ["./analytics-service", "--host=analys2", "--docker=true"]
   analys3:
-    image: analytics-service:latest
+    image: stfnbcx/analytics-service:latest
     ports:
       - "8103:8083"
     depends_on:
@@ -64,7 +64,7 @@ services:
     command: ["./analytics-service", "--host=analys3", "--docker=true"]
   
   discovery:
-    image: discovery-service:latest
+    image: stfnbcx/discovery-service:latest
     ports:
       - "8500:8500"
   
