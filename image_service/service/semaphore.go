@@ -2,6 +2,7 @@ package service
 
 import (
 	"sync"
+	"time"
 )
 
 type Semaphore struct {
@@ -37,4 +38,11 @@ func (s *Semaphore) Release() {
 
 	s.current--
 	s.cond.Signal()
+}
+
+func (s *Semaphore) Block(t int) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	time.Sleep(time.Duration(t) * time.Second)
 }

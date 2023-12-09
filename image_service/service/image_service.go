@@ -107,6 +107,7 @@ func (s *ImageService) DeleteAllImages() error {
 }
 
 func (s *ImageService) AddSagaTransaction(sagaID string, imageID int) {
+	log.Info().Msg("Adding Saga transaction for image: " + strconv.Itoa(imageID))
 	s.transactions[sagaID] = imageID
 }
 
@@ -143,6 +144,7 @@ func (s *ImageService) ConfirmSagaTransaction(sagaID string) error {
 		return errors.New("Error sending SAGA CONFIRM request. Status code: " + strconv.Itoa(res.StatusCode))
 	}
 
+	log.Info().Msg("SAGA transaction confirmed for " + sagaID)
 	return nil
 }
 
@@ -172,6 +174,8 @@ func (s *ImageService) CancelSagaTransaction(sagaID string) error {
 		log.Error().Err(err).Msg("Error sending SAGA CANCEL request. Status code: " + strconv.Itoa(res.StatusCode))
 		return errors.New("Error sending SAGA CANCEL request. Status code: " + strconv.Itoa(res.StatusCode))
 	}
+
+	log.Info().Msg("SAGA transaction cancelled for " + sagaID)
 
 	return nil
 }

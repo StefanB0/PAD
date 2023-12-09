@@ -1,4 +1,4 @@
-build-all: build-image build-discovery build-gateway build-analytics
+build: build-image build-discovery build-gateway build-analytics
 	@echo "Building all"
 build-image:
 	@echo "Building image"
@@ -12,7 +12,8 @@ build-gateway:
 build-discovery:
 	@echo "Building discovery"
 	docker build -t discovery-service ./service_discovery
-push-all: push-image push-discovery push-gateway push-analytics
+
+push: push-image push-discovery push-gateway push-analytics
 	@echo "Pushing all"
 push-image:
 	@echo "Pushing image"
@@ -27,7 +28,8 @@ push-gateway:
 push-discovery:
 	docker tag discovery-service:latest stfnbcx/discovery-service:latest
 	docker push stfnbcx/discovery-service:latest
-pull-all: pull-image pull-discovery pull-gateway pull-analytics
+
+pull: pull-image pull-discovery pull-gateway pull-analytics
 	@echo "Pulling all"
 pull-image:
 	@echo "Pulling image"

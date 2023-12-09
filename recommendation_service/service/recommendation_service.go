@@ -106,14 +106,18 @@ func (s *RecommendationService) RevertSagaTransaction(id string) error {
 		return err
 	}
 
+	log.Info().Msg(fmt.Sprintf("Transaction %s reverted", id))
+
 	return nil
 }
 
-func (s *RecommendationService) AddTransaction(id string, imageID int) {
+func (s *RecommendationService) AddSagaTransaction(id string, imageID int) {
 	s.transactionList[id] = imageID
+	log.Info().Msg(fmt.Sprintf("SAGA Transaction %s added", id))
 }
 
 func (s *RecommendationService) ConfirmSagaTransaction(id string) error {
+	log.Info().Msg(fmt.Sprintf("SAGA Transaction %s confirmed", id))
 	return s.PutSagaTransaction(id, "success")
 }
 

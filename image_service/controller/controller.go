@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"padimage/models"
 	"padimage/service"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
@@ -37,6 +38,7 @@ func (c *ImageController) Run(port string) {
 	app.Post("/deleteImage", c.delete)
 
 	app.Delete("/transaction/:id", c.revertTransaction)
+	app.Get("/block", c.blockService)
 
 	app.Listen(port)
 }
@@ -258,4 +260,16 @@ func (c *ImageController) revertTransaction(ctx *fiber.Ctx) error {
 	log.Info().Msg(fmt.Sprintf("Transaction %s reverted", id))
 
 	return ctx.Status(200).SendString("Transaction reverted")
+}
+
+func (c *ImageController) blockService(ctx *fiber.Ctx) error {
+	durationString := ctx.Params("duration")
+	duration, err := strconv.Atoi(durationString)
+	if err != nil {
+		duration = 30
+	}
+
+	go c.semaphore.Block(duration)
+
+	return ctx.Status(200).SendString("Service blocked")
 }
