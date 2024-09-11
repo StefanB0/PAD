@@ -1,5 +1,3 @@
-# Laboratory work nr 1
-
 # Web Proxy: Image sharing for novice artists
 
 - Author: Boicu Stefan
