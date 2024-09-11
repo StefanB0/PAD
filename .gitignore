@@ -1,0 +1,7 @@
+# db volumes
+local/db-data
+
+# Drawio files
+*.bkp
+*.dtmp
+

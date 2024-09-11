@@ -1,0 +1,821 @@
+{
+	"info": {
+		"_postman_id": "e736c5c5-47ce-4a3c-873e-fd6f43d2a814",
+		"name": "PAD",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26255138"
+	},
+	"item": [
+		{
+			"name": "Auth service",
+			"item": []
+		},
+		{
+			"name": "Image service",
+			"item": [
+				{
+					"name": "Get Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "imageID",
+									"value": "5",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8082/getImage",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"getImage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Image Info",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "imageID",
+									"value": "3",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8082/getImageInfo",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"getImageInfo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Post Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "author",
+									"value": "Bob Ross",
+									"type": "text"
+								},
+								{
+									"key": "title",
+									"value": "A wolf",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "shutterstock wolf",
+									"type": "text"
+								},
+								{
+									"key": "tags",
+									"value": "tree",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/labs/local/sample/tree_shutterstock_1.jpg"
+								},
+								{
+									"key": "sagaID",
+									"value": "FFXSA",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8082/uploadImage",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"uploadImage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Like Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "imageID",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8082/likeImage",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"likeImage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "token",
+									"value": "\"12345\"",
+									"type": "text"
+								},
+								{
+									"key": "imageID",
+									"value": "7",
+									"type": "text"
+								},
+								{
+									"key": "author",
+									"value": "\"Bob Ross\"",
+									"type": "text"
+								},
+								{
+									"key": "title",
+									"value": "\"Wolf\"",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "\"Stylized Wolf\"",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8082/updateImage",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"updateImage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "imageID",
+									"value": "7",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8082/deleteImage",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"deleteImage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Block",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "localhost:8082/block?duration=20",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"block"
+							],
+							"query": [
+								{
+									"key": "duration",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Recommendation service",
+			"item": [
+				{
+					"name": "getTags",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "localhost:8083/getTags",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"getTags"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getRecommend",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "tag",
+									"value": "notwolf",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8083/getRecommendations",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"getRecommendations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getRecommend 2",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "tag",
+									"value": "nature",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8083/getRecommendations",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"getRecommendations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "addImage",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 4,\r\n    \"tags\": [\r\n        \"wolf\"\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8083/addImage",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"addImage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "addImage 2",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 4,\r\n    \"tags\": [\r\n        \"wolf\"\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8083/addImage",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"addImage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updateImage",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "id",
+									"value": "77",
+									"type": "text"
+								},
+								{
+									"key": "views",
+									"value": "100",
+									"type": "text"
+								},
+								{
+									"key": "likes",
+									"value": "100",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8083/updateImage",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"updateImage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleteAll",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "localhost:8083/deleteALL",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"deleteALL"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Gateway",
+			"item": [
+				{
+					"name": "Get Image",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/image/3",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"image",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Image Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/image/info/1",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"image",
+								"info",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Post Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "token",
+									"value": "\"12345\"",
+									"type": "text"
+								},
+								{
+									"key": "author",
+									"value": "\"Bob Ross\"",
+									"type": "text"
+								},
+								{
+									"key": "title",
+									"value": "\"A Stoic wolf\"",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "\"W1\"",
+									"type": "text"
+								},
+								{
+									"key": "tags",
+									"value": "wolf",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/stefan/Void/University/Semester_7/PAD/labs/local/sample/wolf_shutterstock_1.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/image",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"image"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Like Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "token",
+									"value": "\"12345\"",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/image/1/like",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"image",
+								"1",
+								"like"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add redis cache",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "node_name",
+									"value": "Redis3",
+									"type": "text"
+								},
+								{
+									"key": "node_address",
+									"value": "localhost:6381",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/cache",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"cache"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Image",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "author",
+									"value": "\"Nicolas Sam\"",
+									"type": "text"
+								},
+								{
+									"key": "title",
+									"value": "\"Wolf\"",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "\"Stylized Wolf\"",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "localhost:8080/image/1",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"image",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete redis cache",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/cache?node_name=Redis1",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"cache"
+							],
+							"query": [
+								{
+									"key": "node_name",
+									"value": "Redis1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Service Discovery",
+			"item": [
+				{
+					"name": "Get Service",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8500/service/gateway_service",
+							"host": [
+								"localhost"
+							],
+							"port": "8500",
+							"path": [
+								"service",
+								"gateway_service"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8500/serviceall",
+							"host": [
+								"localhost"
+							],
+							"port": "8500",
+							"path": [
+								"serviceall"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Service",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"S1\",\r\n    \"address\": \"localhost\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8500/service",
+							"host": [
+								"localhost"
+							],
+							"port": "8500",
+							"path": [
+								"service"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Service",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "localhost:8500/service/S1?address=localhost&secretkey=5f7c181e9f4b0e6c7f20ecf934ba6435",
+							"host": [
+								"localhost"
+							],
+							"port": "8500",
+							"path": [
+								"service",
+								"S1"
+							],
+							"query": [
+								{
+									"key": "address",
+									"value": "localhost"
+								},
+								{
+									"key": "secretkey",
+									"value": "5f7c181e9f4b0e6c7f20ecf934ba6435"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Saga",
+			"item": [
+				{
+					"name": "Revert Image Service",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8082/transaction/FFXSA",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"transaction",
+								"FFXSA"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

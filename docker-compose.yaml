@@ -1,0 +1,180 @@
+version: '3.5'
+services:
+  gateway:
+    image: stfnbcx/gateway-service:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - discovery
+      - redis1
+      - redis2
+      - redis3
+  
+  img:
+    image: stfnbcx/image-service:latest
+    ports:
+      - 8082:8082
+    depends_on:
+      - imagedb
+      - discovery
+    command: ["./image-service", "--host=img", "--docker=true"]
+  img2:
+    image: stfnbcx/image-service:latest
+    ports:
+      - 8092:8082
+    depends_on:
+      - imagedb
+      - discovery
+    command: ["./image-service", "--host=img2", "--docker=true"]
+  img3:
+    image: stfnbcx/image-service:latest
+    ports:
+      - 8093:8082
+    depends_on:
+      - imagedb
+      - discovery
+    command: ["./image-service", "--host=img3", "--docker=true"]
+  
+  analys:
+    image: stfnbcx/analytics-service:latest
+    ports:
+      - "8083:8083"
+    depends_on:
+      - img
+      - discovery
+      - analyticsdb
+    command: ["./analytics-service", "--host=analys", "--docker=true"]
+  analys2:
+    image: stfnbcx/analytics-service:latest
+    ports:
+      - "8102:8083"
+    depends_on:
+      - img
+      - discovery
+      - analyticsdb
+    command: ["./analytics-service", "--host=analys2", "--docker=true"]
+  analys3:
+    image: stfnbcx/analytics-service:latest
+    ports:
+      - "8103:8083"
+    depends_on:
+      - img
+      - discovery
+      - analyticsdb
+    command: ["./analytics-service", "--host=analys3", "--docker=true"]
+  
+  discovery:
+    image: stfnbcx/discovery-service:latest
+    ports:
+      - "8500:8500"
+  
+  imagedb:
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=mongopassword
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./local/db-data/mongo-data:/data/mongo
+  
+  analyticsdb:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_DB: ANALYTICSDB
+      POSTGRES_PASSWORD: postpass
+    ports:
+      - 5432:5432
+    volumes:
+      - ./local/db-data/postgres-analytics-data:/var/lib/postgresql/data
+  
+  redis1:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./local/db-data/redis-db:/data/redis
+
+  redis2:
+    image: redis:latest
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./local/db-data/redis-db:/data/redis
+
+  redis3:
+    image: redis:latest
+    ports:
+      - "6381:6379"
+    volumes:
+      - ./local/db-data/redis-db:/data/redis
+
+  # # MongoDB Replica Set
+  # mongo1:
+  #   image: mongo
+  #   expose:
+  #     - 27017
+  #   ports:
+  #     - 30001:27017 
+  #   restart: always
+  #   command: mongod --replSet my-mongo-set
+  # mongo2:
+  #   image: mongo
+  #   expose:
+  #     - 27017
+  #   ports:
+  #     - 30002:27017
+  #   restart: always
+  #   command: mongod --replSet my-mongo-set
+  # mongo3:
+  #   image: mongo
+  #   expose:
+  #     - 27017
+  #   ports:
+  #     - 30003:27017
+  #   restart: always
+  #   command: mongod --replSet my-mongo-set
+
+  # mongoinit:
+  #   image: mongo
+  #   restart: "no"
+  #   depends_on:
+  #     - mongo1
+  #     - mongo2
+  #     - mongo3
+  #   command: >
+  #     mongosh --host mongo1:27017 --eval 
+  #     '
+  #     db = (new Mongo("localhost:27017")).getDB("test");
+  #     config = {
+  #     "_id" : "my-mongo-set",
+  #     "members" : [
+  #       {
+  #         "_id" : 0,
+  #         "host" : "mongo1:27017"
+  #       },
+  #       {
+  #         "_id" : 1,
+  #         "host" : "mongo2:27017"
+  #       },
+  #       {
+  #         "_id" : 2,
+  #         "host" : "mongo3:27017"
+  #       }
+  #     ]
+  #     };
+  #     rs.initiate(config);
+  #     '
+
+  
+  # userdb:
+  #   image: postgres:latest
+  #   environment:
+  #     POSTGRES_USER: admin
+  #     POSTGRES_DB: USERDATABASE
+  #     POSTGRES_PASSWORD: postgrespassword
+  #   ports:
+  #     - 5433:5432
+  #   volumes:
+  #     - ./local/db-data/postgres-user-data:/var/lib/postgresql/data

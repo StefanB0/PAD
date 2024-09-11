@@ -1,0 +1,12 @@
+# Gemfile
+source "https://rubygems.org"
+
+# Web framework
+gem 'sinatra'
+gem 'puma'
+
+gem 'redis'
+gem 'httparty'
+
+gem 'securerandom'
+gem 'dotenv'
