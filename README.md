@@ -326,4 +326,3 @@ Deletes all data.
 - **Request:** None
 - **Response:** `200 OK`
   - Body: "All data deleted"
-
